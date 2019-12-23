@@ -8,15 +8,36 @@ export default new Vuex.Store({
     dialogFormVisible:false,
     dialogFormTitle:"",
     moduleConfig:[
-      /*{
+    /* {
         name: '模块1',
         dbtype: 'MySql',
         dataSourceType:'C3P0',
         dbUrl:'',
         dbUser:'',
-        dbPassword:''
+        dbPassword:'',
+        interfaceConfig:[
+          {
+            actionId:"",
+            actionName:'HttpAction',
+            actionType:"",
+            appId:'',
+            insertTime:'',
+            insertUserId:'',
+            itemKey:'',
+            method:'',
+            module:'',
+            release:'',
+            returnType: "",
+            sql:'',
+            sqlColumns:'',
+            sqlParams:'',
+            updateTime:'',
+            updateUserID:''
+          }
+        ],
       }*/
     ],
+
     interfaceNode:{}
   },
   getters:{
@@ -42,13 +63,45 @@ export default new Vuex.Store({
     },
     pushEmptyModuleConfig(state){
       state.moduleConfig.push({
+        itemKey:"",
         name: '新模块',
         dbtype: 'MySql',
         dataSourceType:'C3P0',
         dbUrl:'',
         dbUser:'',
-        dbPassword:''
+        dbPassword:'',
+        useCustomDialect:false,
+        batchSeperator:"",
+        openQuote:"",
+        identitySql:"",
+        closeQuote:"",
+        pagingSqlTemplate:"",
+        parameterPrefix:"",
+        supportsMultipleStatements:false,
+        interfaceConfig:[]
       })
+    },
+    pushEmptyInterfaceConfig(state,index){
+      console.log(index)
+      state.moduleConfig[index].interfaceConfig.push({
+        actionId:"",
+        actionName:'HttpAction',
+        actionType:"",
+        appId:'',
+        insertTime:'',
+        insertUserId:'',
+        itemKey:'',
+        method:'',
+        module:'',
+        release:'',
+        returnType: '',
+        sql:'',
+        sqlColumns:'',
+        sqlParams:'',
+        updateTime:'',
+        updateUserID:''
+      })
+
     },
     setInterfaceNode(state,currNode){
       state.interfaceNode = currNode
@@ -66,6 +119,10 @@ export default new Vuex.Store({
     },
     addModuleConfig({commit}){
       commit('pushEmptyModuleConfig')
+    },
+    addInterfaceConfig({commit},index){
+      console.log(index)
+      commit('pushEmptyInterfaceConfig',index)
     },
     saveCurrentInterfaceNode({commit},currNode){
       commit('setInterfaceNode',currNode)
