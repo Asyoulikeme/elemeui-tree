@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-
+import axios from 'axios'
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -41,12 +41,7 @@ export default new Vuex.Store({
     interfaceNode:{}
   },
   getters:{
-    getDialogFormVisible(state){
-      return state.dialogFormVisible;
-    },
-    getDialogFormTitle(state){
-      return state.dialogFormTitle
-    },
+
     getModuleConfig(state){
       return state.moduleConfig
     },
@@ -55,15 +50,10 @@ export default new Vuex.Store({
     }
   },
   mutations: {
-    setDialogFormVisible(state){
-      state.dialogFormVisible = !(state.dialogFormVisible)
-    },
-    setDialogFormTitle(state,title){
-      state.dialogFormTitle = title
-    },
+
     pushEmptyModuleConfig(state){
       state.moduleConfig.push({
-        itemKey:"",
+        moduleKey:"",
         name: '新模块',
         dbtype: 'MySql',
         dataSourceType:'C3P0',
@@ -108,15 +98,42 @@ export default new Vuex.Store({
     },
     deleteModuleConfigItem(state,index){
       state.moduleConfig[index] = {}
+    },
+    setModuleConfig(state,data){
+      ;
+
+      console.log("----------" + data.length + "-----------")
+
+      for (let i = 0 ; i < data.length ;i++)
+      {
+        let newModuleConfigObj = {
+            // 必须放在这里，放在循环体外面就是浅拷贝，
+        }
+        newModuleConfigObj.name = "新模块"
+        newModuleConfigObj.moduleKey = data[i].moduleKey
+        newModuleConfigObj.dbtype = data[i].dbtype
+        newModuleConfigObj.dataSourceType = data[i].dataSourceType
+        newModuleConfigObj.dbUrl = data[i].dbUrl
+        newModuleConfigObj.dbUser = data[i].dbUser
+        newModuleConfigObj.dbPassword = data[i].dbPassword
+        newModuleConfigObj.useCustomDialect = data[i].useCustomDialect
+        /*
+        newModuleConfigObj.batchSeperator = data[i].customDialectObj.batchSeperator
+        newModuleConfigObj.openQuote = data[i].customDialectObj.openQuote
+        newModuleConfigObj.identitySql = data[i].customDialectObj.identitySql
+        newModuleConfigObj.closeQuote = data[i].customDialectObj.closeQuote
+        newModuleConfigObj.pagingSqlTemplate = data[i].customDialectObj.pagingSqlTemplate
+        newModuleConfigObj.parameterPrefix = data[i].customDialectObj.parameterPrefix
+        newModuleConfigObj.supportsMultipleStatements = data[i].customDialectObj.supportsMultipleStatements*/
+
+        newModuleConfigObj.interfaceConfig = []
+
+        state.moduleConfig.push(newModuleConfigObj)
+      }
     }
   },
   actions: {
-    dialogSwitch({commit}){
-      commit('setDialogFormVisible')
-    },
-    settitle({commit},title){
-      commit('setDialogFormTitle',title)
-    },
+
     addModuleConfig({commit}){
       commit('pushEmptyModuleConfig')
     },
@@ -129,6 +146,18 @@ export default new Vuex.Store({
     },
     deleteModuleConfig({commit},index){
       commit('deleteModuleConfigItem',index)
+    },
+    async fillModuleConfig({commit}){
+      await axios({
+        method:'post',
+        url:'http://192.168.15.16:8482/educloud-report/report/getHttpModuleList',
+
+      }).then(function (response) {
+        //console.log(response.data.list)
+        commit('setModuleConfig',response.data.list)
+
+      })
+
     }
   },
   modules: {

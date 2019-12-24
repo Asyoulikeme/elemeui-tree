@@ -97,7 +97,7 @@
     },
     watch:{
       '$route'(to,from){
-        console.log(to,from)
+        //console.log(to,from)
         this.index = to.params.index  //获取实时最新的 后缀 index，然后index 变化时，整个表单变化
       }
     },

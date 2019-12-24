@@ -24,35 +24,99 @@
     name: 'Tree',
     data(){
       return{
-        nodeData: [{
-          id:1,
-          labelName:"root"
-        }],
+        nodeData: [
+          {
+            id:999,
+            labelName:"root",
+            children:[]
+          }
+        ],
         defaultProps: {
           label: 'labelName',
           children: 'children',
           isLeaf: 'leaf'
         },
-
+        thatNode:Object
       }
     },
     computed:{
       ...mapGetters(['getModuleConfig'])
     },
+    mounted() {
+      console.log("this is Tree Component")
 
+
+      this.fillModuleConfig().then(()=>{
+
+        for (let i = 0 ; i < this.getModuleConfig.length ; i++)
+        {
+          let newChild = {};
+          newChild = {
+            id: nodeKeyId += 1,
+            labelName: "Module",
+            children: []
+          };
+
+          let data = this.thatNode.data
+          if (!data.children) {
+            this.$set(data, 'children', []);
+          }
+          data.children.push(newChild); //增加子节点
+          //this.thatNode.expanded = true  //展开父级
+        }
+
+      }).catch(()=>{
+        alert("error")
+      })
+        //setTimeout(,1000)
+
+      /* p.then(()=>{
+         console.log(this)
+         this.nodeData[0].children.push(...this.getModuleConfig)
+         console.log(this.nodeData[0].children)
+       })*/
+        /*
+        * 首先明白一点，数据已经过来了，也处理好了，我不需要塞数据，我只需要正确的构建出 tree 就行
+        * 第一个问题:
+        * 以上写法的push 数据没问题，问题在于：
+        * 要等待 fillModuleConfig 函数调用成功后然后才能开始填充数据，不然无效（无需push）
+        */
+        /* 第二个问题:
+        * 在控制台 使用 $vm0.nodeData[0].children.push之后，报错
+        * node.data.id 是 undefined
+        * 所以只能模仿 append 函数中的操作，
+        * 每次 push的时候:
+        *  let newChild = {};
+           newChild = {
+              id: nodeKeyId += 1,
+              labelName: "Module",
+              children: []
+            };
+            if (!data.children) {
+              this.$set(data, 'children', []);
+            }
+            data.children.push(newChild); //增加子节点
+            node.expanded = true  //展开父级
+        *
+        *
+        * */
+
+    },
     methods:{
-      renderContent(h,{node,data,store}){  //每生成一个节点，就会触发渲染
 
+      renderContent(h,{node,data,store}){  //每生成一个节点，就会触发渲染
+        console.log("this is a render function")
         // console.log(store)
         if (node.level === 1)
         {
+          //在无法得到 node 的情况下，往vue实例中保存一个 node，便于进行首次渲染Module的时候使用
+          this.thatNode = node;
           return (
             <span>
-            root
-            <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
-
-        <i class="el-icon-success save-all" title="保存所有更改" on-click={() =>this.saveAll()}/>
-        </span>
+              root
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-success save-all" title="保存所有更改" on-click={() =>this.saveAll()}/>
+            </span>
         )
         }
         //当是在root下建立 module，并且之前有在其它 module下建立过 interface
@@ -73,7 +137,7 @@
         }
         if (node.level === 2 && node.childNodes.length === 0 )
         {
-          console.log("在渲染模块1")
+          console.log("在渲染模块,此时还未有子节点")
           console.log(node.data.id)
           return (
             <span>
@@ -85,6 +149,8 @@
         }
         if (node.level === 2 && node.childNodes.length > 0)
         {
+          console.log("在渲染模块,此时有子节点了")
+          console.log("node level ==" + node.level)
           return (
             <span>
             {this.getModuleConfig[node.data.id - 1].name}
@@ -131,14 +197,14 @@
         }else if(node.level === 2) //在模块下新增 接口的时候
         {
           let n = node.data.id - 1;
-          console.log("把生成的interface放到路由下标：" + n)
+       //   console.log("把生成的interface放到路由下标：" + n)
           this.addInterfaceConfig(n)
           labelname = "Interface"
           newChild = {
             id: childrenNodeKeyID += 1,
             labelName: labelname,
           };
-          console.log("childrenNodeKeyID 改变了：childrenNodeKeyID = " + childrenNodeKeyID)
+         // console.log("childrenNodeKeyID 改变了：childrenNodeKeyID = " + childrenNodeKeyID)
         }
 
         if (!data.children) {
@@ -146,8 +212,6 @@
         }
         data.children.push(newChild); //增加子节点
         node.expanded = true  //展开父级
-        // 产生一个JSON数据
-
 
       },//执行添加节点时的动作
       remove(node, data) {
@@ -187,7 +251,7 @@
             this.$store.dispatch("saveCurrentInterfaceNode",node)
           }break;
         }
-      },//展示编辑框
+      },//展示编辑框,改变路由
       saveAll(){
         //去除空对象
         let newModuleConfig = [];
@@ -201,8 +265,8 @@
           }
         }
         console.log(newModuleConfig)
-      },
-      ...mapActions(['addModuleConfig','deleteModuleConfig','addInterfaceConfig'])
+      },// 点击绿色的勾勾发起保存动作
+      ...mapActions(['fillModuleConfig','addModuleConfig','deleteModuleConfig','addInterfaceConfig'])
     }
   };
 </script>

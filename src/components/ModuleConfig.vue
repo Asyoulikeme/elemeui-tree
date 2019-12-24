@@ -1,8 +1,8 @@
 <template>
   <div class="module-interface-container">
     <el-form :model="getModuleConfig[index]">
-      <el-form-item label="itemKey" :label-width="formLabelWidth">
-        <el-input v-model="getModuleConfig[index].itemKey" placeholder="主键" autocomplete="off"></el-input>
+      <el-form-item label="moduleKey" :label-width="formLabelWidth">
+        <el-input v-model="getModuleConfig[index].moduleKey" placeholder="主键" autocomplete="off"></el-input>
       </el-form-item>
       <el-form-item label="模块名称" :label-width="formLabelWidth">
         <el-input v-model="getModuleConfig[index].name" autocomplete="off"></el-input>
@@ -94,8 +94,10 @@
     },
     watch:{
       '$route'(to,from){
-        console.log(to,from)
+        //console.log(to,from)
         this.index = to.params.index  //获取实时最新的 后缀 index，然后index 变化时，整个表单变化
+        console.log("index数据：" + this.index)
+        console.log(this.getModuleConfig[this.index].name)
       }
     },
     methods:{

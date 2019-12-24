@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <header></header>
+    <header>
+      <h1>低内聚，高耦合</h1>
+    </header>
     <div id="main-body">
       <div id="left-box">
         <Tree />
@@ -16,7 +18,7 @@
 </template>
 <script>
 
-  import ModuleConfig from './components/ModuleConfig';
+
   import Tree from './components/Tree';
 
 export default {
@@ -24,7 +26,10 @@ export default {
   components: {
     Tree
   },
+  mounted() {
+    console.log("this is App Component")
 
+  }
 }
 </script>
 <style lang="scss">
@@ -52,6 +57,9 @@ export default {
     width: 100%;
     height: 95px;
     background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 
