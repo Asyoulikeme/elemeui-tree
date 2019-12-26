@@ -17,9 +17,10 @@
 <script>
 
   import {mapState,mapGetters,mapActions} from 'vuex'
-
-  let nodeKeyId = 0; // 代表 module 节点的ID
-  let childrenNodeKeyID = 0;
+  import axios from 'axios'
+  let nodeKeyId = 0; // 代表 整棵树下面一共有多少个 module （level == 2） 也是其标识ID，随着add 增长
+  let childrenNodeKeyID = 0; // 整颗树下面一共有多少个 interface（level == 3）
+  let childrenNodeLength = 0; //是其标识ID，随着add 增长
   export default {
     name: 'Tree',
     data(){
@@ -40,6 +41,7 @@
       }
     },
     computed:{
+
       ...mapGetters(['getModuleConfig'])
     },
     mounted() {
@@ -62,43 +64,18 @@
             this.$set(data, 'children', []);
           }
           data.children.push(newChild); //增加子节点
-          //this.thatNode.expanded = true  //展开父级
+          this.thatNode.expanded = true  //展开父级
         }
-
       }).catch(()=>{
         alert("error")
+      }).then(()=>{
+        console.log("Module 处理完毕，开始处理 interface")
+        this.fillInterfaceConfig()
       })
-        //setTimeout(,1000)
 
-      /* p.then(()=>{
-         console.log(this)
-         this.nodeData[0].children.push(...this.getModuleConfig)
-         console.log(this.nodeData[0].children)
-       })*/
         /*
-        * 首先明白一点，数据已经过来了，也处理好了，我不需要塞数据，我只需要正确的构建出 tree 就行
-        * 第一个问题:
-        * 以上写法的push 数据没问题，问题在于：
-        * 要等待 fillModuleConfig 函数调用成功后然后才能开始填充数据，不然无效（无需push）
-        */
-        /* 第二个问题:
-        * 在控制台 使用 $vm0.nodeData[0].children.push之后，报错
-        * node.data.id 是 undefined
-        * 所以只能模仿 append 函数中的操作，
-        * 每次 push的时候:
-        *  let newChild = {};
-           newChild = {
-              id: nodeKeyId += 1,
-              labelName: "Module",
-              children: []
-            };
-            if (!data.children) {
-              this.$set(data, 'children', []);
-            }
-            data.children.push(newChild); //增加子节点
-            node.expanded = true  //展开父级
-        *
-        *
+        * 首先明白一点，数据已经在store中发ajax读过来了，也处理好了，我不需要塞数据到tree里面，我只需要正确的构建出 tree 就行
+        * 只有 tree 的 key 对应上就行
         * */
 
     },
@@ -119,53 +96,56 @@
             </span>
         )
         }
-        //当是在root下建立 module，并且之前有在其它 module下建立过 interface
+        //当在root下建立 module，并且之前有在其它 module下建立过 interface
         // 这导致了 key id 的增长 所以要额外处理
         // 并且注重这几个 if 的排序
         if (node.level === 2 && node.childNodes.length === 0 && childrenNodeKeyID > 0)
         {
-          console.log("进来了")
           let n = node.data.id - 1
           console.log("要去的下标是：" + n)
           return (
             <span>
-            {this.getModuleConfig[n].name}
-            <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
-        <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.remove(node, data)} />
-        </span>
-        )
+              {this.getModuleConfig[n].name}
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
+              <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+            </span>
+          )
         }
         if (node.level === 2 && node.childNodes.length === 0 )
         {
-          console.log("在渲染模块,此时还未有子节点")
-          console.log(node.data.id)
+          //console.log("在渲染模块,此时还未有子节点")
           return (
             <span>
-            {this.getModuleConfig[node.data.id - 1].name}
-            <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
-        <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.remove(node, data)} />
-        </span>
-        )
+              {this.getModuleConfig[node.data.id - 1].name}
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
+              <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+            </span>
+          )
         }
         if (node.level === 2 && node.childNodes.length > 0)
         {
-          console.log("在渲染模块,此时有子节点了")
+          //console.log("在渲染模块,此时模块下面有子节点了")
           console.log("node level ==" + node.level)
           return (
             <span>
-            {this.getModuleConfig[node.data.id - 1].name}
-            <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
-        <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.remove(node, data)} />
-        </span>
-        )
+              {this.getModuleConfig[node.data.id - 1].name}
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
+              <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+            </span>
+          )
         }
         if (node.level === 3)
         {
-          console.log("在渲染接口")
+          //console.log("在渲染接口")
           return (
             <span>
             接口
+            <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeInterfaceNode(node, data)} />
             </span>
+
         )
         }
       },//初始化渲染，并且在每次添加的时候也会被调用
@@ -187,8 +167,9 @@
         let newChild = {};
 
         if(node.level === 1){ //在根目录下新建的时候 添加一个模块
-          this.addModuleConfig()
-
+          let index = node.childNodes.length ; //作为 itemKey的值
+          console.log("传过去的值:" + index)
+          this.addModuleConfig(index)
           newChild = {
             id: nodeKeyId += 1,
             labelName: "Module",
@@ -196,15 +177,22 @@
           };
         }else if(node.level === 2) //在模块下新增 接口的时候
         {
-          let n = node.data.id - 1;
-       //   console.log("把生成的interface放到路由下标：" + n)
-          this.addInterfaceConfig(n)
+          let index = node.data.id - 1;
+          let interfaceNodeKey = 0;
+          /*
+          * 此处的 index 代表要放入的 module node tree 的下标
+          * interfaceNodeKey 为附加属性，该属性用于删除下标
+          *
+          * */
+
           labelname = "Interface"
           newChild = {
-            id: childrenNodeKeyID += 1,
+            id: childrenNodeLength += 1, //子节点个数增长
             labelName: labelname,
           };
-         // console.log("childrenNodeKeyID 改变了：childrenNodeKeyID = " + childrenNodeKeyID)
+          childrenNodeKeyID += 1 // 标识ID 增长
+          interfaceNodeKey = childrenNodeKeyID
+          this.addInterfaceConfig({index,interfaceNodeKey})
         }
 
         if (!data.children) {
@@ -214,7 +202,7 @@
         node.expanded = true  //展开父级
 
       },//执行添加节点时的动作
-      remove(node, data) {
+      removeModuleNode(node, data) {
         event.stopPropagation();// 阻止冒泡给nodeClick
         const parent = node.parent;
         const children = parent.data.children || parent.data;
@@ -226,7 +214,22 @@
         const index = children.findIndex(d => d.id === data.id);
         children.splice(index, 1);
       },
-      showParameterEdit(obj,node,curr){
+      removeInterfaceNode(node, data) {
+        event.stopPropagation();// 阻止冒泡给nodeClick
+        const parent = node.parent;
+        const children = parent.data.children || parent.data;
+
+        console.log(parent.data.id - 1,node.data.id - 1)
+        let parent_index = parent.data.id - 1;
+        let self_index = node.data.id - 1;
+        this.deleteInterfaceConfig({parent_index,self_index})//并且删除 对应的InterfaceConfig item
+        childrenNodeKeyID -= 1 // 下标减一
+
+        // 删除对应的 tree node
+        const index = children.findIndex(d => d.id === data.id);
+        children.splice(index, 1)
+      },
+      showParameterEdit(obj,node){
         console.log("当前所点击的node id 是:" + node.id)
         console.log("当前节点ID 已经增长到了:" + (nodeKeyId + childrenNodeKeyID )+ "个")
         console.log(("当前interface 的数量:" + childrenNodeKeyID))
@@ -266,7 +269,41 @@
         }
         console.log(newModuleConfig)
       },// 点击绿色的勾勾发起保存动作
-      ...mapActions(['fillModuleConfig','addModuleConfig','deleteModuleConfig','addInterfaceConfig'])
+      saveCurrentModule(node){
+        event.stopPropagation();// 阻止冒泡给nodeClick
+        console.log(node)
+
+        // 保存信息
+        axios({
+          method:'post',
+          url:'http://192.168.15.16:8482/educloud-report/report/updateHttpModule',
+          data:{
+            useCustomDialect:this.getModuleConfig[node.data.id -1].useCustomDialect,
+            batchSeperator:this.getModuleConfig[node.data.id -1].batchSeperator,
+            openQuote:this.getModuleConfig[node.data.id -1].openQuote,
+            identitySql:this.getModuleConfig[node.data.id -1].identitySql,
+            closeQuote:this.getModuleConfig[node.data.id -1].closeQuote,
+            pagingSqlTemplate:this.getModuleConfig[node.data.id -1].pagingSqlTemplate,
+            parameterPrefix:this.getModuleConfig[node.data.id -1].parameterPrefix,
+            supportsMultipleStatements:this.getModuleConfig[node.data.id -1].supportsMultipleStatements,
+            dbType:this.getModuleConfig[node.data.id -1].dbType,
+            dataSourceType:this.getModuleConfig[node.data.id -1].dataSourceType,
+            dbUser:this.getModuleConfig[node.data.id -1].dbUser,
+            dbPassword:this.getModuleConfig[node.data.id -1].dbPassword,
+            dbUrl:this.getModuleConfig[node.data.id -1].dbUrl,
+           // itemKey:node.data.id -1,
+            moduleKey:this.getModuleConfig[node.data.id -1].moduleKey,
+
+          }
+        }).then((data)=>{
+          console.log("保存更新成功")
+          console.log(data)
+        }).catch((error)=>{
+          console.log("保存更新失败")
+          console.log(error)
+        })
+      },
+      ...mapActions(['fillModuleConfig','fillInterfaceConfig','addModuleConfig','addInterfaceConfig','deleteModuleConfig','deleteInterfaceConfig'])
     }
   };
 </script>

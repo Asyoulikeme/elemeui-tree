@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header>
-      <h1>低内聚，高耦合</h1>
+      <Test />
     </header>
     <div id="main-body">
       <div id="left-box">
@@ -20,11 +20,12 @@
 
 
   import Tree from './components/Tree';
-
+  import Test from './components/test';
 export default {
 
   components: {
-    Tree
+    Tree,
+    Test
   },
   mounted() {
     console.log("this is App Component")
@@ -72,7 +73,7 @@ export default {
   height: calc(100% - 105px);
   margin-top: 10px;
   #left-box{
-    width: 200px;
+    width: 230px;
     height: 100%;
     background: #ffffff;
     box-shadow: 0 2px 15px -8px rgba(0,0,0,.5);
@@ -108,7 +109,7 @@ export default {
   }
 
   #right-box{
-    width: calc(100% - 210px);
+    width: calc(100% - 240px);
     height: 100%;
     background: #ffffff;
     border: 1px solid #ebebeb;
@@ -124,29 +125,44 @@ export default {
     }
   }
 }
-.is-current{
 
-}
 .el-tree-node__content{
   height: 45px !important;
 
   border-bottom: 1px solid #f4f4f4;
 
   .plus{
+    opacity: .7;
     margin-left: 1rem;
     color: #409eff;
     transition: all .1s linear;
     &:hover{
-      text-shadow: 0 2px 15px -8px rgba(0,0,0,.9);
+      opacity: 1;
     }
   }
   .delete{
+    opacity: .7;
     margin-left: 1rem;
     color: red;
+    &:hover{
+      opacity: 1;
+    }
+  }
+  .save-current-module{
+    opacity: .7;
+    margin-left: 1rem;
+    color: #999999;
+    &:hover{
+      opacity: 1;
+    }
   }
   .save-all{
+    opacity: .7;
     margin-left: 1rem;
     color: #4fc08d;
+    &:hover{
+      opacity: 1;
+    }
   }
 }
 

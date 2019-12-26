@@ -102,17 +102,9 @@
     },
     methods:{
 
-        /*
-        * 这里不能push 路由跳转，要把tree node 拿过来，
-        * 判断 当前模块节点下面有没有子接口如果有，那就显示
-        * 打算在模块信息展示下面 弄个收缩盒子，把接口信息藏在里边
-        *
-        * */
-        //this.$router.push({name:'InterfaceConfig'})
-
     },
     mounted() {
-      //console.log(this.$route.params)
+
     }
   };
 </script>

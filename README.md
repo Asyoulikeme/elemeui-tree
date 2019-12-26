@@ -43,3 +43,9 @@ moduleConfig = [
   >
 - 正确的做法是 使用 `data` 中的配置 配置一个 `id`
   > 使用 node.data.id 来 作为唯一的标识
+
+## 关于module从后端读取后的渲染
+
+> 后台返回的Json格式可能有所改变，应该先观察返回的Json对象
+> 在 `setModuleConfig` 的同时注意接口中返回的Json中的某些对象是否为空
+> ，否则将在中途抛出错误
