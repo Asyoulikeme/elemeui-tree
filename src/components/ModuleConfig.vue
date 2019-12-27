@@ -90,7 +90,7 @@
       InterfaceConfig
     },
     computed:{
-      ...mapGetters(['getModuleConfig','getCurrentInterfaceNode'])
+      ...mapGetters(['getModuleConfig'])
     },
     watch:{
       '$route'(to,from){

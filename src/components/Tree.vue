@@ -1,17 +1,42 @@
 <template>
-  <el-tree
-    :data="nodeData"
-    :props="defaultProps"
-    :render-content="renderContent"
-    :highlight-current="true"
-    :accordion="true"
-    node-key="id"
-    @node-click="showParameterEdit"
+  <div>
+    <el-tree
+      :data="nodeData"
+      :props="defaultProps"
+      :render-content="renderContent"
+      :highlight-current="true"
+      :accordion="true"
+      node-key="id"
+      @node-click="showParameterEdit"
 
-    :expand-on-click-node="false"
-  >
+      :expand-on-click-node="false"
+    >
 
-  </el-tree>
+    </el-tree>
+
+    <el-dialog title="新建接口" :visible="getCreateInterfaceConfirmStatus"
+               @close="closeDialog"
+               :destroy-on-close="true"
+    >
+      <el-form :model="form">
+        <el-form-item label="接口名称" :label-width="formLabelWidth">
+          <el-input v-model="form.name" autocomplete="off" placeholder="良好的接口名能帮助你使用"></el-input>
+        </el-form-item>
+        <el-form-item label="接口类型" :label-width="formLabelWidth">
+          <el-select v-model="form.interfaceType" placeholder="请选择接口类型">
+            <el-option label="HttpAction" value="HttpAction"></el-option>
+            <el-option label="HttpQueryAction" value="HttpQueryAction"></el-option>
+            <el-option label="HttpActionReport" value="HttpActionReport"></el-option>
+            <el-option label="HttpQueryActionReport" value="HttpQueryActionReport"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancel">取 消</el-button>
+        <el-button type="primary" @click="saveAndSwitch">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
@@ -29,6 +54,7 @@
           {
             id:999,
             labelName:"root",
+
             children:[]
           }
         ],
@@ -37,16 +63,22 @@
           children: 'children',
           isLeaf: 'leaf'
         },
-        thatNode:Object
+        thatNode:Object,
+        treeObj:{},
+        parentNode:{},
+        dialogFormVisible: true,
+        form: {
+          name: '',
+          interfaceType: '',
+        },
+        formLabelWidth: '120px'
       }
     },
     computed:{
-
-      ...mapGetters(['getModuleConfig'])
+      ...mapGetters(['getModuleConfig','getCreateInterfaceConfirmStatus'])
     },
     mounted() {
       console.log("this is Tree Component")
-
 
       this.fillModuleConfig().then(()=>{
 
@@ -72,12 +104,10 @@
         console.log("Module 处理完毕，开始处理 interface")
         this.fillInterfaceConfig()
       })
-
         /*
         * 首先明白一点，数据已经在store中发ajax读过来了，也处理好了，我不需要塞数据到tree里面，我只需要正确的构建出 tree 就行
         * 只有 tree 的 key 对应上就行
         * */
-
     },
     methods:{
 
@@ -91,7 +121,7 @@
           return (
             <span>
               root
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-success save-all" title="保存所有更改" on-click={() =>this.saveAll()}/>
             </span>
         )
@@ -106,9 +136,10 @@
           return (
             <span>
               {this.getModuleConfig[n].name}
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
               <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+
             </span>
           )
         }
@@ -118,10 +149,12 @@
           return (
             <span>
               {this.getModuleConfig[node.data.id - 1].name}
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
               <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+
             </span>
+
           )
         }
         if (node.level === 2 && node.childNodes.length > 0)
@@ -131,9 +164,10 @@
           return (
             <span>
               {this.getModuleConfig[node.data.id - 1].name}
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.beforeAdd(node)}/>
+              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
               <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+
             </span>
           )
         }
@@ -150,56 +184,39 @@
         }
       },//初始化渲染，并且在每次添加的时候也会被调用
       beforeAdd(node){
-        if (node.level === 3)
-        {
-          return ; //不允许再增加了
-        }
-
+      },//点击增加按钮的事件处理,在增加节点之前处理一些事情
+      append(node){
         event.stopPropagation();// 阻止冒泡给nodeClick
         const data = node.data //node 代表当前节点，不是这个加号
-        this.append(node,data) // node 传过去，方便点击添加按钮的时候 马上展开
-
-      },//点击增加按钮的事件处理,在增加节点之前处理一些事情
-      append(node,data){
-        //console.log("增加的ID为：" + node.id)
         let labelname = ""
-
         let newChild = {};
 
         if(node.level === 1){ //在根目录下新建的时候 添加一个模块
           let index = node.childNodes.length ; //作为 itemKey的值
-          console.log("传过去的值:" + index)
           this.addModuleConfig(index)
           newChild = {
             id: nodeKeyId += 1,
             labelName: "Module",
             children: []
           };
-        }else if(node.level === 2) //在模块下新增 接口的时候
+
+          if (!data.children) {
+            this.$set(data, 'children', []);
+          }
+          data.children.push(newChild); //增加子节点
+          node.expanded = true  //展开父级
+
+        }
+        else if(node.level === 2) //在模块下新增 接口的时候
         {
-          let index = node.data.id - 1;
-          let interfaceNodeKey = 0;
-          /*
-          * 此处的 index 代表要放入的 module node tree 的下标
-          * interfaceNodeKey 为附加属性，该属性用于删除下标
-          *
-          * */
-
-          labelname = "Interface"
-          newChild = {
-            id: childrenNodeLength += 1, //子节点个数增长
-            labelName: labelname,
-          };
-          childrenNodeKeyID += 1 // 标识ID 增长
-          interfaceNodeKey = childrenNodeKeyID
-          this.addInterfaceConfig({index,interfaceNodeKey})
+          //进来先不执行其它操作，先展示
+          // 开启确认对话框
+          let status = true
+          this.switchCreateInterfaceConfirm({status})
+          //  存储当前的 node
+          this.parentNode = node;
+          this.treeObj = this
         }
-
-        if (!data.children) {
-          this.$set(data, 'children', []);
-        }
-        data.children.push(newChild); //增加子节点
-        node.expanded = true  //展开父级
 
       },//执行添加节点时的动作
       removeModuleNode(node, data) {
@@ -222,7 +239,10 @@
         console.log(parent.data.id - 1,node.data.id - 1)
         let parent_index = parent.data.id - 1;
         let self_index = node.data.id - 1;
-        this.deleteInterfaceConfig({parent_index,self_index})//并且删除 对应的InterfaceConfig item
+
+        let interfaceType = node.data.interfaceType
+        console.log(node)
+        this.deleteInterfaceConfig({parent_index,self_index,interfaceType})//并且删除 对应的InterfaceConfig item
         childrenNodeKeyID -= 1 // 下标减一
 
         // 删除对应的 tree node
@@ -303,7 +323,72 @@
           console.log(error)
         })
       },
-      ...mapActions(['fillModuleConfig','fillInterfaceConfig','addModuleConfig','addInterfaceConfig','deleteModuleConfig','deleteInterfaceConfig'])
+      closeDialog(){
+        console.log("close")
+        let status = false
+        this.switchCreateInterfaceConfirm({status})
+      },
+      saveAndSwitch(){
+
+        let status = false
+        this.switchCreateInterfaceConfirm({status})  //关闭对话框
+        let index = this.parentNode.data.id -1 //moduleConfig index
+
+
+        let interfaceNodeKey = 0; // 初始化
+        /*
+        * 此处的 index 代表要放入的 module node tree 的下标
+        * interfaceNodeKey 为附加属性，该属性用于删除下标
+        *
+        * */
+        let newChild = {
+          id: childrenNodeLength += 1, //子节点个数增长
+          labelName: this.form.name,
+          interfaceType:this.form.interfaceType
+        };
+        childrenNodeKeyID += 1 // 标识ID 增长
+        interfaceNodeKey = childrenNodeKeyID
+
+        let name = this.form.name   // interface name
+        switch (this.form.interfaceType) {
+          case "HttpAction":{
+            this.addHttpActionInterface({index,name,interfaceNodeKey})
+          }break;
+          case "HttpQueryAction":{
+
+          }break;
+          case "HttpActionReport":{
+
+          }break;
+          case "HttpQueryActionReport":{
+
+          }break;
+          default:{
+            alert("类型错误")
+          }
+        }
+
+
+        if (!this.parentNode.data.children) {
+          this.treeObj.$set(this.parentNode.data, 'children', []);
+        }
+        this.parentNode.data.children.push(newChild); //增加子节点
+        this.parentNode.expanded = true  //展开父级
+      },
+      cancel(){
+        let status = false
+        this.switchCreateInterfaceConfirm({status})
+      },
+      ...mapActions(['fillModuleConfig',
+        'fillInterfaceConfig',
+        'addModuleConfig',
+        'addInterfaceConfig',
+        'deleteModuleConfig',
+        'deleteInterfaceConfig',
+        'switchCreateInterfaceConfirm',
+        'addHttpActionInterface'
+      ]),
+
     }
   };
 </script>

@@ -1,61 +1,61 @@
 <template>
   <el-collapse accordion>
-    <div v-if="getInterfaceConfig.length == 0" class="empty-holder">暂无数据</div>
-    <el-collapse-item v-for="(item,indexof) in getInterfaceConfig" :key="indexof">
+
+    <el-collapse-item v-for="(HttpAction,indexof) in getHttpActionInterfaceConfig" :key="indexof">
       <div slot="title" class="title-desc">
-        {{item.actionName}}<i class="header-icon el-icon-info"></i>
+        {{HttpAction.actionName}}<i class="header-icon el-icon-info"></i>
       </div>
       <el-form :model="item">
         <el-form-item label="接口名称" :label-width="formLabelWidth">
-          <el-input v-model="item.actionName" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.actionName" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="接口ID" :label-width="formLabelWidth">
-          <el-input v-model="item.actionId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.actionId" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="itemKey" :label-width="formLabelWidth">
-          <el-input v-model="item.itemKey" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.itemKey" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="接口类型" :label-width="formLabelWidth">
-          <el-input v-model="item.actionType" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.actionType" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="AppID" :label-width="formLabelWidth">
-          <el-input v-model="item.appId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.appId" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="插入时间" :label-width="formLabelWidth">
-          <el-input v-model="item.insertTime" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.insertTime" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="插入用户ID" :label-width="formLabelWidth">
-          <el-input v-model="item.insertUserId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.insertUserId" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="method">
-          <el-radio-group v-model="item.method">
+          <el-radio-group v-model="HttpAction.method">
             <el-radio label="GET"></el-radio>
             <el-radio label="POST"></el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="所属模块" :label-width="formLabelWidth">
-          <el-input v-model="item.module" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.module" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="release" :label-width="formLabelWidth">
-          <el-input v-model="item.release" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.release" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="returnType" :label-width="formLabelWidth">
-          <el-input v-model="item.returnType" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.returnType" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="sql" :label-width="formLabelWidth">
-          <el-input v-model="item.sql" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.sql" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="sqlColumns" :label-width="formLabelWidth">
-          <el-input v-model="item.sqlColumns" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.sqlColumns" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="sqlParams" :label-width="formLabelWidth">
-          <el-input v-model="item.sqlParams" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.sqlParams" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="updateTime" :label-width="formLabelWidth">
-          <el-input v-model="item.updateTime" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.updateTime" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="updateTime" :label-width="formLabelWidth">
-          <el-input v-model="item.updateUserId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.updateUserId" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
     </el-collapse-item>
@@ -65,6 +65,11 @@
 
 <script>
   import {mapGetters} from 'vuex'
+
+  /*
+  * 这个组件的显示有点复杂，
+  * 首先要弄 四个 el-collapse-item
+  * */
   export default {
     name: 'InterfaceConfig',
     data(){
@@ -76,8 +81,8 @@
     },
     computed:{
 
-      getInterfaceConfig(){
-        return this.$store.state.moduleConfig[this.index].interfaceConfig
+      getHttpActionInterfaceConfig(){
+        return this.$store.state.moduleConfig[this.index].interfaceConfig.HttpAction
       }
     },
     watch:{

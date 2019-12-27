@@ -6,50 +6,23 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
+    createInterfaceConfirm:false,
     moduleConfig:[
-    /* {
-        name: '模块1',
-        dbtype: 'MySql',
-        dataSourceType:'C3P0',
-        dbUrl:'',
-        dbUser:'',
-        dbPassword:'',
-        interfaceConfig:[
-          {
-            actionId:"",
-            actionName:'HttpAction',
-            actionType:"",
-            appId:'',
-            insertTime:'',
-            insertUserId:'',
-            itemKey:'',
-            method:'',
-            module:'',
-            release:'',
-            returnType: "",
-            sql:'',
-            sqlColumns:'',
-            sqlParams:'',
-            updateTime:'',
-            updateUserID:''
-          }
-        ],
-      }*/
-    ],
-
-    interfaceNode:{}
+    ]
   },
   getters:{
 
     getModuleConfig(state){
       return state.moduleConfig
     },
-    getCurrentInterfaceNode(state){
-      return state.interfaceNode
+    getCreateInterfaceConfirmStatus(state){
+      return state.createInterfaceConfirm
     }
   },
   mutations: {
-
+    setCreateInterfaceConfirmStatus(state,status){
+      state.createInterfaceConfirm = status
+    },
     pushEmptyModuleConfig(state,index){
       state.moduleConfig.push({
         //itemKey:index,
@@ -68,10 +41,25 @@ export default new Vuex.Store({
         pagingSqlTemplate:"",
         parameterPrefix:"",
         supportsMultipleStatements:false,
-        interfaceConfig:[]
+        interfaceConfig:{
+          HttpAction:[
+
+          ],
+          HttpQueryAction:[
+
+          ],
+          HttpActionReport:[
+
+          ],
+          HttpQueryActionReport:[
+
+          ]
+        }
       })
     },
     pushEmptyInterfaceConfig(state,{index,interfaceNodeKey}){
+      // 这里要加确认新建，新建一个什么接口
+
       console.log(index)
       state.moduleConfig[index].interfaceConfig.push({
         interfaceNodeKey:interfaceNodeKey,
@@ -100,15 +88,19 @@ export default new Vuex.Store({
     deleteModuleConfigItem(state,index){
       state.moduleConfig[index] = {}
     },
-    deleteInterfaceConfigItem(state,{parent_index,self_index}){
-
+    deleteInterfaceConfigItem(state,{parent_index,self_index,interfaceType}){
+      /*
+      * parent_index 所处模块下标
+      * self_index 第N 条
+      * interfaceType 类型
+      * */
       console.log(parent_index,self_index)
       /*
       * 找到当前 id 在数组的哪个位置
       * 为此需要在 addInterfaceConfig，fillInterfaceConfig 的时候，给interface多增加一个属性为 :interfaceNodeKey
       * */
-      let index = commons.objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig,"interfaceNodeKey",self_index)
-      state.moduleConfig[parent_index].interfaceConfig.splice(index,1)
+      //let index = commons.objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig,"interfaceNodeKey",self_index)
+      state.moduleConfig[parent_index].interfaceConfig[interfaceType].splice(self_index,1)
     },
     setModuleConfig(state,data){
 
@@ -136,7 +128,20 @@ export default new Vuex.Store({
         newModuleConfigObj.parameterPrefix = data[i].customDialectObj == null? "":data[i].customDialectObj.parameterPrefix
         newModuleConfigObj.supportsMultipleStatements = data[i].customDialectObj == null? "":data[i].customDialectObj.supportsMultipleStatements
 
-        newModuleConfigObj.interfaceConfig = []
+        newModuleConfigObj.interfaceConfig = {
+        HttpAction:[
+
+        ],
+          HttpQueryAction:[
+
+        ],
+          HttpActionReport:[
+
+        ],
+          HttpQueryActionReport:[
+
+        ]
+      }
 
         state.moduleConfig.push(newModuleConfigObj)
       }
@@ -150,6 +155,27 @@ export default new Vuex.Store({
       * 将 interface 插入到对应的 module 下面
       * */
       console.log(data)
+    },
+    setHttpActionInterface(state,{index,name,interfaceNodeKey}){
+      state.moduleConfig[index].interfaceConfig.HttpAction.push({
+        interfaceNodeKey:interfaceNodeKey,
+        actionId:"",
+        actionName:name,
+        actionType:"",
+        appId:'',
+        insertTime:'',
+        insertUserId:'',
+        itemKey:'',
+        method:'',
+        module:'',
+        release:'',
+        returnType: '',
+        sql:'',
+        sqlColumns:'',
+        sqlParams:'',
+        updateTime:'',
+        updateUserID:''
+      })
     }
   },
   actions: {
@@ -197,8 +223,8 @@ export default new Vuex.Store({
     deleteModuleConfig({commit},index){
       commit('deleteModuleConfigItem',index)
     },
-    deleteInterfaceConfig({commit},{parent_index,self_index}){
-      commit('deleteInterfaceConfigItem',{parent_index,self_index})
+    deleteInterfaceConfig({commit},{parent_index,self_index,interfaceType}){
+      commit('deleteInterfaceConfigItem',{parent_index,self_index,interfaceType})
     },
     async fillModuleConfig({commit}){
       await axios({
@@ -219,6 +245,13 @@ export default new Vuex.Store({
       }).then((response)=>{
         commit('setInterfaceConfig',response.data.list)
       })
+    },
+    switchCreateInterfaceConfirm({commit},{status}){
+      commit('setCreateInterfaceConfirmStatus',status)
+      //this.addInterfaceConfig({})
+    },
+    addHttpActionInterface({commit},{index,name,interfaceNodeKey}){
+      commit('setHttpActionInterface',{index,name,interfaceNodeKey})
     }
   },
   modules: {

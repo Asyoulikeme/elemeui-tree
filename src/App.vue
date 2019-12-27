@@ -85,6 +85,7 @@ export default {
 
     .el-tree-node__content{
       position: relative;
+
       &::after{
 
         content: '';

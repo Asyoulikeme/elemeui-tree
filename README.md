@@ -49,3 +49,45 @@ moduleConfig = [
 > 后台返回的Json格式可能有所改变，应该先观察返回的Json对象
 > 在 `setModuleConfig` 的同时注意接口中返回的Json中的某些对象是否为空
 > ，否则将在中途抛出错误
+
+## 关于命名
+
+- 每一个 `HttpAction `必定属于一个 `HttpModule`
+- HttpQueryAction 
+- HttpActionReport
+- HttpQueryActionReport
+
+从后台读取到的 `HttpAction` 放入到 `moduleConfig` 的 `inter `
+
+```javascript
+moduleConfig = [
+  {
+    moduleKey:1,
+    interfaceConfig:
+    {
+        HttpAction:[
+          
+        ],
+        HttpQueryAction:[
+        
+        ],
+        HttpActionReport:[
+        
+        ],
+        HttpQueryActionReport:[
+        
+        ]     
+    } 
+    
+  }
+]
+```
+getHttpActionList之后，
+遍历这个 List ，找到每一项的唯一标识 id，（moduleKey）
+在返回的数据里面，字段名字叫 module
+
+看看这个HttpAction 接口信息是属于哪一个 模块，就放到对应的模块下面
+
+先在 moduleConfig 里面找 module 的 index 然后
+放到 moduleConfig[index].interfaceConfig.HttpAction.push({})
+
