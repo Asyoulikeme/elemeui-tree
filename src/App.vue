@@ -110,20 +110,31 @@ export default {
   }
 
   #right-box{
-    width: calc(100% - 240px);
+    width: calc(100vw - 240px - 0px);
     height: 100%;
     background: #ffffff;
     border: 1px solid #ebebeb;
     border-radius: 3px;
     padding: 24px;
 
-    overflow-y: auto;
+    overflow-y: scroll;
     overflow-x: hidden;
 
-    .el-form{
-      width: 460px;
-      *border: 1px solid red;
+    &::-webkit-scrollbar{
+
+      background: #ffffff;
+      width: 10px;
+      -webkit-border-radius:6px;
+
     }
+
+    &::-webkit-scrollbar-thumb{
+      background: transparent;
+
+    }
+
+
+
   }
 }
 
@@ -166,5 +177,9 @@ export default {
     }
   }
 }
+
+  .input-selec{
+    min-width: 270px !important;
+  }
 
 </style>

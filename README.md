@@ -1,11 +1,10 @@
 
 ## 关于store.state.moduleConfig 的 length
->> 在遍历 store中的状态 moduleConfig 的length的时候
+>在遍历 store中的状态 moduleConfig 的length的时候
 >不能直接使用.length，要额外的写个函数遍历，判断里面的对象
 >是否为空
 >如果为空则不计算 实际长度的length
 >如果不为空，则计算实际长度的 length
->
 
 > moduleConfig 中的存储可能呈现为以下样子:
 
@@ -32,7 +31,7 @@ moduleConfig = [
 >
 
 
-## 关于 element-tree
+## 关于 element-tree 中的 id
 
 - 增加节点后 `node.id` 会 +1
 - 移除节点后 `node.id` 会 -1
@@ -42,6 +41,7 @@ moduleConfig = [
   >但它的 node id 永远维护着自己的增长规律
   >
 - 正确的做法是 使用 `data` 中的配置 配置一个 `id`
+  
   > 使用 node.data.id 来 作为唯一的标识
 
 ## 关于module从后端读取后的渲染
@@ -50,7 +50,7 @@ moduleConfig = [
 > 在 `setModuleConfig` 的同时注意接口中返回的Json中的某些对象是否为空
 > ，否则将在中途抛出错误
 
-## 关于命名
+## 关于命名与 对象的结构设计
 
 - 每一个 `HttpAction `必定属于一个 `HttpModule`
 - HttpQueryAction 
@@ -90,4 +90,14 @@ getHttpActionList之后，
 
 先在 moduleConfig 里面找 module 的 index 然后
 放到 moduleConfig[index].interfaceConfig.HttpAction.push({})
+
+## 关于tree node（树节点）中如果加入了 vue 中的响应式数据
+>tree node（树节点）中如果加入了 vue 中的响应式数据,则 tree的 
+>`:render-content="指定的render函数"` ，该指定的 render 函数会被调用多次
+>（因为vue检测到了依赖的添加，则会动态的通知依赖点更新） 
+
+>解决方案：
+
+-  需要在 指定的render 函数中加入 多个情况下的`if`
+- 
 

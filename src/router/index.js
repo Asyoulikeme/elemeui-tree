@@ -2,11 +2,10 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import ModuleConfig from '../components/ModuleConfig';
 import InterfaceConfig from '../components/InterfaceConfig'
-
+import App from '../App';
 Vue.use(VueRouter);
 
 const routes = [
-
   {
     path:'/ModuleConfig/:index',
     name:'ModuleConfig',

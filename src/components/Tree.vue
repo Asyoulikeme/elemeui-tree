@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="tree-container">
     <el-tree
       :data="nodeData"
       :props="defaultProps"
@@ -8,7 +8,7 @@
       :accordion="true"
       node-key="id"
       @node-click="showParameterEdit"
-
+      :indent="12"
       :expand-on-click-node="false"
     >
 
@@ -20,7 +20,7 @@
     >
       <el-form :model="form">
         <el-form-item label="接口名称" :label-width="formLabelWidth">
-          <el-input v-model="form.name" autocomplete="off" placeholder="良好的接口名能帮助你使用"></el-input>
+          <el-input v-model="form.name" autocomplete="off" placeholder="良好的接口名能帮助你使用" />
         </el-form-item>
         <el-form-item label="接口类型" :label-width="formLabelWidth">
           <el-select v-model="form.interfaceType" placeholder="请选择接口类型">
@@ -77,10 +77,9 @@
     computed:{
       ...mapGetters(['getModuleConfig','getCreateInterfaceConfirmStatus'])
     },
-    mounted() {
-      console.log("this is Tree Component")
+    async mounted() {
 
-      this.fillModuleConfig().then(()=>{
+      await this.fillModuleConfig().then(()=>{
 
         for (let i = 0 ; i < this.getModuleConfig.length ; i++)
         {
@@ -100,9 +99,24 @@
         }
       }).catch(()=>{
         alert("error")
-      }).then(()=>{
-        console.log("Module 处理完毕，开始处理 interface")
-        this.fillInterfaceConfig()
+      })
+      console.log("Module 处理完毕，开始处理 interface")
+      await this.fillInterfaceConfig().then(()=>{
+        // 先找到所在的 module，然后再往 module 里面渲染
+        // 一共四种接口，处理第一种：HttpAction
+        console.log(this.thatNode)
+       for(let i = 0 ; i < this.getModuleConfig.length ;i++)
+        {
+          /*
+          *  i 代表 Module tree node 的下标 （index）
+          *  在 module[i].interfaceConfig.HttpAction下面找
+          *  如果 module[i].interfaceConfig.HttpAction.length >0 则说明有接口node 要渲染到当前的 module node 下面
+          *  module node 通过拿到 root 节点，然后 root.childNodes[i]
+          *  实际为： this.thatNode.childNodes[i], （下次来直接用）
+          * */
+        }
+      }).catch(()=>{
+
       })
         /*
         * 首先明白一点，数据已经在store中发ajax读过来了，也处理好了，我不需要塞数据到tree里面，我只需要正确的构建出 tree 就行
@@ -111,7 +125,7 @@
     },
     methods:{
 
-      renderContent(h,{node,data,store}){  //每生成一个节点，就会触发渲染
+      renderContent(h,{node,data}){  //每生成一个节点，就会触发渲染
         console.log("this is a render function")
         // console.log(store)
         if (node.level === 1)
@@ -143,9 +157,11 @@
             </span>
           )
         }
+        /*
+        * 代表在当前的 module 下面还未有任何子节点
+        * */
         if (node.level === 2 && node.childNodes.length === 0 )
         {
-          //console.log("在渲染模块,此时还未有子节点")
           return (
             <span>
               {this.getModuleConfig[node.data.id - 1].name}
@@ -157,9 +173,11 @@
 
           )
         }
+        /*
+        * 代表在当前的 module 下面有子节点一个或以上
+        * */
         if (node.level === 2 && node.childNodes.length > 0)
         {
-          //console.log("在渲染模块,此时模块下面有子节点了")
           console.log("node level ==" + node.level)
           return (
             <span>
@@ -167,21 +185,22 @@
               <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
               <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
-
             </span>
           )
         }
-        if (node.level === 3)
+        if (node.level === 3 )
         {
-          //console.log("在渲染接口")
+          //console.log("在渲染接口,此时改模块下有1个接口,渲染的id为:" + n)
+          let val = "Interface"
           return (
             <span>
-            接口
-            <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeInterfaceNode(node, data)} />
+              {val}
+              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeInterfaceNode(node, data)} />
             </span>
 
-        )
+          )
         }
+
       },//初始化渲染，并且在每次添加的时候也会被调用
       beforeAdd(node){
       },//点击增加按钮的事件处理,在增加节点之前处理一些事情
@@ -205,7 +224,7 @@
           }
           data.children.push(newChild); //增加子节点
           node.expanded = true  //展开父级
-
+          this.$router.push({name:'ModuleConfig',params:{index:(nodeKeyId -1)}})
         }
         else if(node.level === 2) //在模块下新增 接口的时候
         {
@@ -223,26 +242,39 @@
         event.stopPropagation();// 阻止冒泡给nodeClick
         const parent = node.parent;
         const children = parent.data.children || parent.data;
-        //console.log(node.childNodes.length)
+
         childrenNodeKeyID -= node.childNodes.length // 清除模块下的子节点
         console.log("index:" + (node.data.id - 1))
-        this.deleteModuleConfig(node.data.id - 1)//并且删除 对应的ModuleConfig item
-        //nodeKeyId -= 1; // 下标减一
-        const index = children.findIndex(d => d.id === data.id);
-        children.splice(index, 1);
+
+        //删除 对应的ModuleConfig item
+        this.deleteModuleConfig(node.data.id - 1).then((response)=>{
+          console.log("删除成功")
+          //nodeKeyId -= 1; // 下标减一
+
+          //删除tree node
+          const index = children.findIndex(d => d.id === data.id);
+          children.splice(index, 1);
+
+          this.$router.push('/')
+        }).catch((error)=>{
+          console.log("删除失败")
+        })
+
+
+
       },
       removeInterfaceNode(node, data) {
         event.stopPropagation();// 阻止冒泡给nodeClick
         const parent = node.parent;
         const children = parent.data.children || parent.data;
 
-        console.log(parent.data.id - 1,node.data.id - 1)
+        console.log(parent.data.id - 1,node.data.id)
         let parent_index = parent.data.id - 1;
-        let self_index = node.data.id - 1;
+        let self_id = node.data.id;
 
         let interfaceType = node.data.interfaceType
         console.log(node)
-        this.deleteInterfaceConfig({parent_index,self_index,interfaceType})//并且删除 对应的InterfaceConfig item
+        this.deleteInterfaceConfig({parent_index,self_id,interfaceType})//并且删除 对应的InterfaceConfig item
         childrenNodeKeyID -= 1 // 下标减一
 
         // 删除对应的 tree node
@@ -257,6 +289,7 @@
         console.log(node.data.id)
         switch (node.level) {
           case 1:{
+            this.$router.push('/')
             return ;
           };break;
           case 2:{
@@ -336,26 +369,36 @@
 
 
         let interfaceNodeKey = 0; // 初始化
+        let interfaceType = this.form.interfaceType
         /*
         * 此处的 index 代表要放入的 module node tree 的下标
         * interfaceNodeKey 为附加属性，该属性用于删除下标
         *
         * */
         let newChild = {
-          id: childrenNodeLength += 1, //子节点个数增长
+          id:  childrenNodeKeyID += 1, //子节点个数增长
           labelName: this.form.name,
-          interfaceType:this.form.interfaceType
+          interfaceType
         };
-        childrenNodeKeyID += 1 // 标识ID 增长
+        childrenNodeLength += 1
+        // 标识ID 增长
         interfaceNodeKey = childrenNodeKeyID
 
         let name = this.form.name   // interface name
-        switch (this.form.interfaceType) {
+        console.log("增加了一个" + interfaceType + "类型的接口")
+        switch (interfaceType) {
           case "HttpAction":{
             this.addHttpActionInterface({index,name,interfaceNodeKey})
+              .then((response)=>{
+                console.log(response.msg)
+              })
+              .catch((error)=>{
+                console.log(error)
+                return ; // 此处return 不起作用
+              })
           }break;
           case "HttpQueryAction":{
-
+            this.addHttpQueryActionInterface({index,name,interfaceNodeKey})
           }break;
           case "HttpActionReport":{
 
@@ -365,6 +408,7 @@
           }break;
           default:{
             alert("类型错误")
+            return ;
           }
         }
 
@@ -382,17 +426,29 @@
       ...mapActions(['fillModuleConfig',
         'fillInterfaceConfig',
         'addModuleConfig',
-        'addInterfaceConfig',
         'deleteModuleConfig',
         'deleteInterfaceConfig',
         'switchCreateInterfaceConfirm',
-        'addHttpActionInterface'
+        'addHttpActionInterface',
+        'addHttpQueryActionInterface'
       ]),
 
     }
   };
 </script>
 
-<style scoped>
+<style lang="scss">
+
+  #tree-container{
+    .el-input{
+      width: 220px;
+
+    }
+    .el-dialog{
+      width: 500px;
+      height: 300px;
+
+    }
+  }
 
 </style>
