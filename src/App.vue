@@ -26,10 +26,6 @@ export default {
   components: {
     Tree,
     Test
-  },
-  mounted() {
-    console.log("this is App Component")
-
   }
 }
 </script>

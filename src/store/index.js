@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import {getHttpModuleList,getHttpActionList,deleteHttpModule,addHttpAction} from '../api/index'
+import {getHttpModuleList,getHttpActionList,deleteHttpModule,deleteHttpAction,addHttpModule,addHttpAction} from '../api/index'
 import {objectArrayFoundKeyIndex} from '../assets/js/commons';
 
 import axios from 'axios'
@@ -28,39 +28,8 @@ export default new Vuex.Store({
     setCreateInterfaceConfirmStatus(state,status){
       state.createInterfaceConfirm = status
     },
-    pushEmptyModuleConfig(state,index){
-      state.moduleConfig.push({
-        itemKey:index,
-        moduleKey:index,
-        name: '新模块',
-        dbtype: 'MySql',
-        dataSourceType:'C3P0',
-        dbUrl:'',
-        dbUser:'',
-        dbPassword:'',
-        useCustomDialect:false,
-        batchSeperator:"",
-        openQuote:"",
-        identitySql:"",
-        closeQuote:"",
-        pagingSqlTemplate:"",
-        parameterPrefix:"",
-        supportsMultipleStatements:false,
-        interfaceConfig:{
-          HttpAction:[
-
-          ],
-          HttpQueryAction:[
-
-          ],
-          HttpActionReport:[
-
-          ],
-          HttpQueryActionReport:[
-
-          ]
-        }
-      })
+    pushEmptyModuleConfig(state,item){
+      state.moduleConfig.push(item)
     },
 
     setInterfaceNode(state,currNode){
@@ -75,15 +44,20 @@ export default new Vuex.Store({
       * self_index 第N 条
       * interfaceType 类型
       * */
-      console.log(parent_index,self_id)
       /*
       * 找到当前 id 在数组的哪个位置
       * 为此需要在 addInterfaceConfig，fillInterfaceConfig 的时候，给interface多增加一个属性为 :interfaceNodeKey
       * */
-      //let index = commons.objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig,"interfaceNodeKey",self_index)
-      let index = objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig[interfaceType],'interfaceNodeKey',self_id)
+      console.log(parent_index,interfaceType,self_id)
+      try {
+        let index = objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig[interfaceType],'interfaceNodeKey',self_id)
+        state.moduleConfig[parent_index].interfaceConfig[interfaceType].splice(index,1)
+      }
+      catch (e) {
+        console.log("错误的迭代查询" + e)
+      }
 
-      state.moduleConfig[parent_index].interfaceConfig[interfaceType].splice(index,1)
+
     },
     setModuleConfig(state,data){
 
@@ -140,7 +114,6 @@ export default new Vuex.Store({
       console.log(data)
     },
     initSetHttpActionConfig(state,list){
-      console.log(list)
       let belongWithModule = 0;
       for (let item of list)
       {
@@ -148,29 +121,10 @@ export default new Vuex.Store({
         item.sqlParams[0].value =  JSON.stringify(item.sqlParams[0].value)
         belongWithModule = item.module
         state.moduleConfig[belongWithModule].interfaceConfig.HttpAction.push(item)
-
       }
     },
-    setHttpActionInterface(state,{index,name,interfaceNodeKey}){
-      state.moduleConfig[index].interfaceConfig.HttpAction.push({
-        interfaceNodeKey:interfaceNodeKey,
-        actionId:"",
-        actionName:name,
-        actionType:"",
-        appId:'',
-        insertTime:'',
-        insertUserId:'',
-        itemKey:'',
-        method:'',
-        module:'',
-        release:'',
-        returnType: '',
-        sql:'',
-        sqlColumns:'',
-        sqlParams:'',
-        updateTime:'',
-        updateUserID:''
-      })
+    setHttpActionInterface(state,{index,item}){
+      state.moduleConfig[index].interfaceConfig.HttpAction.push(item)
     },
     setHttpQueryActionInterface(state,{index,name,interfaceNodeKey}){
       state.moduleConfig[index].interfaceConfig.HttpQueryAction.push({
@@ -222,37 +176,60 @@ export default new Vuex.Store({
       * step 2:发送ajax请求给后端保存一个(add)模块，这里不能使用 state.moduleConfig，因为后端接收的数据结构有所不同
       * step 3: 请求成功 添加，请求失败 回滚
       * */
-      commit('pushEmptyModuleConfig',index)
-      console.log("添加的itemKey为:" + index)
-      axios({
-        method:'post',
-        url:'http://192.168.15.16:8482/educloud-report/report/saveHttpModule',
-        data:{
-         // itemKey:index,
-          moduleKey:index,
-          name: '新模块',
-          dbtype: 'MySql',
-          dataSourceType:'C3P0',
-          dbUrl:'',
-          dbUser:'',
-          dbPassword:'',
-          useCustomDialect:false,
-          batchSeperator:"",
-          openQuote:"",
-          identitySql:"",
-          closeQuote:"",
-          pagingSqlTemplate:"",
-          parameterPrefix:"",
-          supportsMultipleStatements:false,
-          interfaceConfig:[]
+
+      console.log("添加的Module itemKey为:" + index)
+      let item = {
+        moduleKey:999 + "",
+        name: '新模块',
+        dbtype: 'MySql',
+        dataSourceType:'C3P0',
+        dbUrl:'',
+        dbUser:'',
+        dbPassword:'',
+        useCustomDialect:false,
+        batchSeperator:"",
+        openQuote:"",
+        identitySql:"",
+        closeQuote:"",
+        pagingSqlTemplate:"",
+        parameterPrefix:"",
+        supportsMultipleStatements:false,
+        interfaceConfig:{
+          HttpAction:[
+
+          ],
+          HttpQueryAction:[
+
+          ],
+          HttpActionReport:[
+
+          ],
+          HttpQueryActionReport:[
+
+          ]
         }
-      }).then((data)=>{
-        console.log(data)
-        console.log("添加成功")
-      }).catch((error)=>{
-        console.log(error)
-        console.log("添加失败")
+      }
+      console.log("-------------------212--------------------------")
+      console.log(item)
+      return new Promise((resolve, reject)=>{
+
+        addHttpModule(item).then((response)=>{
+          if (response.code !== 0){
+            console.log("添加成功")
+            commit('pushEmptyModuleConfig',item)
+            resolve(response)
+          }
+          else {
+            reject(response.code)
+          }
+        }).catch((error)=>{
+          console.log("执行过程中出错")
+        }).finally(()=>{
+          console.log("内层promise 结束")
+          return
+        })
       })
+
     },
 
     saveCurrentInterfaceNode({commit},currNode){
@@ -280,7 +257,27 @@ export default new Vuex.Store({
 
     },
     deleteInterfaceConfig({commit},{parent_index,self_id,interfaceType}){
-      commit('deleteInterfaceConfigItem',{parent_index,self_id,interfaceType})
+      return new Promise((resolve,reject)=>{
+        deleteHttpAction(
+          {
+            itemKey:self_id
+          }
+        ).then((response)=>{
+          if (response.code ==1)
+          {
+            console.log("删除"+interfaceType +"成功")
+            commit('deleteInterfaceConfigItem',{parent_index,self_id,interfaceType})
+            resolve(response)
+          }
+          else {
+            console.log(response.msg)
+          }
+        }).catch((error)=>{
+            reject(error)
+        })
+
+      })
+
     },
      fillModuleConfig({commit}){
       return new Promise((resolve, reject)=>{
@@ -318,17 +315,17 @@ export default new Vuex.Store({
       //this.addInterfaceConfig({})
     },
     addHttpActionInterface({commit},{index,name,interfaceNodeKey}){
-      return new Promise((resolve, reject) => {
-        let currentDate = new Date()
 
-        addHttpAction({
+        let currentDate = new Date()
+        console.log(index,name,interfaceNodeKey)
+        let item = {
           actionId:'',
           actionName:'New HttpAction',
           actionType:'None',
           appId:'',
           insertTime: "",
           insertUserId:'',
-          itemKey:interfaceNodeKey,
+          itemKey:interfaceNodeKey + "",
           method:'',
           module:index,
           release:"false",
@@ -363,19 +360,20 @@ export default new Vuex.Store({
           }
           * */
           updateUserId:''
-        })
-          .then((response)=>{
+        }
+        console.log(item)
+      return new Promise((resolve, reject) => {
+        addHttpAction(item).then((response)=>{
             if (response.code !== 0){
               console.log("添加 HttpAction 成功")
-              commit('setHttpActionInterface',{index,name,interfaceNodeKey})
+              commit('setHttpActionInterface',{index,item})
               resolve(response)
             }
             else {
               console.log(response)
-              reject("未知错误添加失败")
+              reject(response.msg)
             }
-          })
-          .catch((error)=>{
+          }).catch((error)=>{
             console.log("错误")
             reject("执行出错")
           })

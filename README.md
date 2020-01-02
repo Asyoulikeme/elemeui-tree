@@ -101,3 +101,7 @@ getHttpActionList之后，
 -  需要在 指定的render 函数中加入 多个情况下的`if`
 - 
 
+## 关于Vuex 读取数据库后 element-tree 渲染节点的注意事项
+
+
+````

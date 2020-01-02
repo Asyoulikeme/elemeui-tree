@@ -42,6 +42,7 @@
 <script>
 
   import {mapState,mapGetters,mapActions} from 'vuex'
+  import {LOGSTYLE} from '../assets/js/commons';
   import axios from 'axios'
   let nodeKeyId = 0; // 代表 整棵树下面一共有多少个 module （level == 2） 也是其标识ID，随着add 增长
   let childrenNodeKeyID = 0; // 整颗树下面一共有多少个 interface（level == 3）
@@ -78,7 +79,7 @@
       ...mapGetters(['getModuleConfig','getCreateInterfaceConfirmStatus'])
     },
     async mounted() {
-
+      console.log("%c this is a Tree Component",LOGSTYLE.blackBackColor)
       await this.fillModuleConfig().then(()=>{
 
         for (let i = 0 ; i < this.getModuleConfig.length ; i++)
@@ -100,23 +101,46 @@
       }).catch(()=>{
         alert("error")
       })
-      console.log("Module 处理完毕，开始处理 interface")
+      console.log("ModuleConfig 处理完毕，开始处理 InterfaceConfig")
       await this.fillInterfaceConfig().then(()=>{
         // 先找到所在的 module，然后再往 module 里面渲染
-        // 一共四种接口，处理第一种：HttpAction
-        console.log(this.thatNode)
        for(let i = 0 ; i < this.getModuleConfig.length ;i++)
         {
+          console.log("out infinite")
           /*
           *  i 代表 Module tree node 的下标 （index）
           *  在 module[i].interfaceConfig.HttpAction下面找
-          *  如果 module[i].interfaceConfig.HttpAction.length >0 则说明有接口node 要渲染到当前的 module node 下面
-          *  module node 通过拿到 root 节点，然后 root.childNodes[i]
-          *  实际为： this.thatNode.childNodes[i], （下次来直接用）
+          *  如果 module[i].interfaceConfig.HttpAction.length >0 则说明有接口节点 要渲染到当前的 模块节点下面
+          *  module node（模块节点） 通过拿到 root 节点，然后 root.childNodes[i]
+          *  实际为已经存储好的： this.thatNode.childNodes[i], （直接用）
           * */
+          let interfaceNodeKey = 0; // 初始化,该属性用于标识node，用来删除
+          // 一共四种接口，处理第一种：HttpAction
+          for (let j = 0;j < this.getModuleConfig[i].interfaceConfig.HttpAction.length ; j++){
+            console.log("in infinite")
+            let interfaceType = "HttpAction"
+            let labelName = "interface" + j
+
+            let newChild = {
+              id:  childrenNodeKeyID += 1, //子节点个数增长
+              labelName,
+              interfaceType
+            };
+            childrenNodeLength += 1
+            // 标识ID 增长
+            interfaceNodeKey = childrenNodeKeyID
+            if (!this.thatNode.childNodes[i].data.children) {
+              this.thatNode.childNodes[i].$set(this.thatNode.childNodes[i].data, 'children', []);
+            }
+            this.thatNode.childNodes[i].data.children.push(newChild); //增加子节点
+            this.thatNode.childNodes[i].expanded = true  //展开父级
+          }
+          console.log("InterfaceConfig.HttpAction 处理完毕")
+          // 处理第二种: HttpQueryAction
+
         }
       }).catch(()=>{
-
+            console.log("渲染接口失败")
       })
         /*
         * 首先明白一点，数据已经在store中发ajax读过来了，也处理好了，我不需要塞数据到tree里面，我只需要正确的构建出 tree 就行
@@ -126,8 +150,8 @@
     methods:{
 
       renderContent(h,{node,data}){  //每生成一个节点，就会触发渲染
-        console.log("this is a render function")
-        // console.log(store)
+        console.log("%c render function be called in Tree Component",LOGSTYLE.lightRed)
+
         if (node.level === 1)
         {
           //在无法得到 node 的情况下，往vue实例中保存一个 node，便于进行首次渲染Module的时候使用
@@ -178,7 +202,7 @@
         * */
         if (node.level === 2 && node.childNodes.length > 0)
         {
-          console.log("node level ==" + node.level)
+
           return (
             <span>
               {this.getModuleConfig[node.data.id - 1].name}
@@ -196,6 +220,7 @@
             <span>
               {val}
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeInterfaceNode(node, data)} />
+              <i class="el-icon-s-claim save-current-module" title="保存接口" on-click={()=>this.saveCurrentInterface(node)}/>
             </span>
 
           )
@@ -212,19 +237,27 @@
 
         if(node.level === 1){ //在根目录下新建的时候 添加一个模块
           let index = node.childNodes.length ; //作为 itemKey的值
-          this.addModuleConfig(index)
-          newChild = {
-            id: nodeKeyId += 1,
-            labelName: "Module",
-            children: []
-          };
 
-          if (!data.children) {
-            this.$set(data, 'children', []);
-          }
-          data.children.push(newChild); //增加子节点
-          node.expanded = true  //展开父级
-          this.$router.push({name:'ModuleConfig',params:{index:(nodeKeyId -1)}})
+          this.addModuleConfig(index).then((response)=>{
+            newChild = {
+              id: nodeKeyId += 1,
+              labelName: "Module",
+              children: []
+            };
+
+            if (!data.children) {
+              this.$set(data, 'children', []);
+            }
+            data.children.push(newChild); //增加子节点
+            node.expanded = true  //展开父级
+            this.$router.push({name:'ModuleConfig',params:{index:(nodeKeyId -1)}}) // 添加成功后跳转路由
+          }).catch((error)=>{
+            console.log("没有添加成功")
+          }).finally(()=>{
+            console.log("外层promise 结束")
+            return
+          })
+
         }
         else if(node.level === 2) //在模块下新增 接口的时候
         {
@@ -268,12 +301,10 @@
         const parent = node.parent;
         const children = parent.data.children || parent.data;
 
-        console.log(parent.data.id - 1,node.data.id)
         let parent_index = parent.data.id - 1;
         let self_id = node.data.id;
 
         let interfaceType = node.data.interfaceType
-        console.log(node)
         this.deleteInterfaceConfig({parent_index,self_id,interfaceType})//并且删除 对应的InterfaceConfig item
         childrenNodeKeyID -= 1 // 下标减一
 
@@ -282,11 +313,11 @@
         children.splice(index, 1)
       },
       showParameterEdit(obj,node){
-        console.log("当前所点击的node id 是:" + node.id)
-        console.log("当前节点ID 已经增长到了:" + (nodeKeyId + childrenNodeKeyID )+ "个")
+        console.log("当前所点击节点的id 是:" + node.id)
+        console.log("当前所点击节点的data.id 是:" + node.data.id)
+        console.log("Root下的节点数 已经增长到了:" + (nodeKeyId + childrenNodeKeyID )+ "个")
         console.log(("当前interface 的数量:" + childrenNodeKeyID))
-        console.log("先看一下node里的的id:")
-        console.log(node.data.id)
+
         switch (node.level) {
           case 1:{
             this.$router.push('/')
@@ -324,7 +355,6 @@
       },// 点击绿色的勾勾发起保存动作
       saveCurrentModule(node){
         event.stopPropagation();// 阻止冒泡给nodeClick
-        console.log(node)
 
         // 保存信息
         axios({
@@ -356,12 +386,16 @@
           console.log(error)
         })
       },
+      saveCurrentInterface(node){
+        event.stopPropagation();// 阻止冒泡给nodeClick
+
+      },
       closeDialog(){
         console.log("close")
         let status = false
         this.switchCreateInterfaceConfirm({status})
       },
-      saveAndSwitch(){
+    async saveAndSwitch(){
 
         let status = false
         this.switchCreateInterfaceConfirm({status})  //关闭对话框
@@ -385,16 +419,16 @@
         interfaceNodeKey = childrenNodeKeyID
 
         let name = this.form.name   // interface name
-        console.log("增加了一个" + interfaceType + "类型的接口")
+
         switch (interfaceType) {
           case "HttpAction":{
-            this.addHttpActionInterface({index,name,interfaceNodeKey})
-              .then((response)=>{
+           // console.log(index,name,interfaceNodeKey)
+            await this.addHttpActionInterface({index,name,interfaceNodeKey}).then((response)=>{
                 console.log(response.msg)
-              })
-              .catch((error)=>{
+              }).catch((error)=>{
                 console.log(error)
-                return ; // 此处return 不起作用
+                //console.log("执行return")
+
               })
           }break;
           case "HttpQueryAction":{
@@ -408,11 +442,11 @@
           }break;
           default:{
             alert("类型错误")
-            return ;
+            return ;      // 最后一个return 有用，能阻止创建
           }
         }
 
-
+      //console.log("执行添加节点")
         if (!this.parentNode.data.children) {
           this.treeObj.$set(this.parentNode.data, 'children', []);
         }
