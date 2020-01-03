@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 import {getHttpModuleList,getHttpActionList,deleteHttpModule,deleteHttpAction,addHttpModule,addHttpAction} from '../api/index'
 import {objectArrayFoundKeyIndex} from '../assets/js/commons';
 
-import axios from 'axios'
+import {LOGSTYLE} from '../assets/js/commons';
 
 Vue.use(Vuex);
 
@@ -25,19 +25,27 @@ export default new Vuex.Store({
 
   },
   mutations: {
+    //对话框状态处理
     setCreateInterfaceConfirmStatus(state,status){
       state.createInterfaceConfirm = status
     },
+    //添加模块时前端数据结构的变化
     pushEmptyModuleConfig(state,item){
       state.moduleConfig.push(item)
     },
-
+    //保存接口信息时前端数据结构的变化
     setInterfaceNode(state,currNode){
       state.interfaceNode = currNode
     },
+    //删除模块信息时前端动作
     deleteModuleConfigItem(state,index){
+      /*console.log("删除 moduleConfig的下标为：" + index)
+      state.moduleConfig.splice(index,1)
+      * 使用splice 会破坏数组，渲染会出问题，所以只能设置为空对象
+      */
       state.moduleConfig[index] = {}
     },
+    //删除接口时前端数据结构的变化
     deleteInterfaceConfigItem(state,{parent_index,self_id,interfaceType}){
       /*
       * parent_index 所处模块下标
@@ -59,7 +67,8 @@ export default new Vuex.Store({
 
 
     },
-    setModuleConfig(state,data){
+    //首次渲染模块时前端数据结构的变化
+    initSetModuleConfig(state,data){
 
       console.log("----------totalled Module length: " + data.length + "-----------")
 
@@ -103,27 +112,28 @@ export default new Vuex.Store({
         state.moduleConfig.push(newModuleConfigObj)
       }
     },
-    setInterfaceConfig(state,data){
-      /*
-      * 如果需求描述中每一个 HttpAction 都属于某一个module，
-      * 那么，现在要明确module 的唯一标识是什么，
-      * 在 interface 里面找到对应标识 module 的 id
-      * 通过 id 查找 module列表，
-      * 将 interface 插入到对应的 module 下面
-      * */
-      console.log(data)
-    },
+    //首次渲染接口时前端数据结构的变化
     initSetHttpActionConfig(state,list){
       let belongWithModule = 0;
       for (let item of list)
       {
         // 要将对象处理一下再填充
         item.sqlParams[0].value =  JSON.stringify(item.sqlParams[0].value)
-        belongWithModule = item.module
-        state.moduleConfig[belongWithModule].interfaceConfig.HttpAction.push(item)
+        belongWithModule = item.module  //属于moduleKey 为几的模块？
+        let index = objectArrayFoundKeyIndex(state.moduleConfig,"moduleKey",parseInt(belongWithModule))
+        try{
+          state.moduleConfig[index].interfaceConfig.HttpAction.push(item)
+        }
+        catch (e) {
+          console.log(e)
+          console.warn("%c 有一个接口渲染失败,原因:" + "数据库中没有属于该接口的模块",LOGSTYLE.errorBackColor)
+        }
       }
     },
+    //
     setHttpActionInterface(state,{index,item}){
+      console.log("视图层数据结构操作被调用")
+      console.log("添加到下标为" + index + "的模块中去")
       state.moduleConfig[index].interfaceConfig.HttpAction.push(item)
     },
     setHttpQueryActionInterface(state,{index,name,interfaceNodeKey}){
@@ -168,18 +178,11 @@ export default new Vuex.Store({
     }
   },
   actions: {
-
+    //添加模块的异步
     addModuleConfig({commit},index){
-      /*
-      * 该函数作为 模块的创建，
-      * step 1:在前端创建一个空的模块对象，方便前端显示
-      * step 2:发送ajax请求给后端保存一个(add)模块，这里不能使用 state.moduleConfig，因为后端接收的数据结构有所不同
-      * step 3: 请求成功 添加，请求失败 回滚
-      * */
-
       console.log("添加的Module itemKey为:" + index)
       let item = {
-        moduleKey:999 + "",
+        moduleKey:index + "",
         name: '新模块',
         dbtype: 'MySql',
         dataSourceType:'C3P0',
@@ -209,34 +212,26 @@ export default new Vuex.Store({
           ]
         }
       }
-      console.log("-------------------212--------------------------")
-      console.log(item)
       return new Promise((resolve, reject)=>{
-
         addHttpModule(item).then((response)=>{
-          if (response.code !== 0){
-            console.log("添加成功")
+          if (response.code === 1){
             commit('pushEmptyModuleConfig',item)
-            resolve(response)
+            resolve()
           }
           else {
-            reject(response.code)
+            reject(response.msg)
           }
         }).catch((error)=>{
-          console.log("执行过程中出错")
-        }).finally(()=>{
-          console.log("内层promise 结束")
-          return
+          console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
         })
       })
-
     },
-
+    // 保存接口的异步
     saveCurrentInterfaceNode({commit},currNode){
       commit('setInterfaceNode',currNode)
     },
+    // 删除模块的异步
     deleteModuleConfig({state,commit},index){
-
       let key = state.moduleConfig[index].moduleKey
       console.log("要删除的是 moduleKey：" + key)
       return new Promise((resolve,reject)=>{
@@ -244,26 +239,37 @@ export default new Vuex.Store({
         deleteHttpModule({
           itemKey:key
         }).then((response)=>{
-          console.log(response)
-          if (response.code !== 0)
+          if (response.code === 1)
           resolve(response)
           else
-          reject("失败了")
+          reject(response.msg)
 
         }).catch((error)=>{
-          reject(error)
+          console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
         })
       })
 
     },
-    deleteInterfaceConfig({commit},{parent_index,self_id,interfaceType}){
+    deleteInterfaceConfig({state,commit},{parent_index,self_id,interfaceType,currentChildNodeindex}){
+      console.log(parent_index,self_id,interfaceType,currentChildNodeindex)
+      /*
+      * parent_index  当前接口位于哪个模块（moduleConfig 的下标）
+      * self_id       当前节点的 node.data.id
+      * interfaceType 确保删除某个类型的节点
+      * currentChildNodeindex   当前节点在模块的第 n 个下标位置，也就代表了要用itemKey 来删除
+      * */
+
+      let itemKey = state.moduleConfig[parent_index].interfaceConfig[interfaceType][currentChildNodeindex].itemKey
+      console.log("%c 即将删除的是当前下标为:" + "%c " + parent_index + "%c 的模块下面的第:" + "%c " + currentChildNodeindex + "%c 个节点,它的itemKey为:"+"%c " + itemKey ,
+        LOGSTYLE.vueBackColor,LOGSTYLE.blackBackColor,LOGSTYLE.vueBackColor,LOGSTYLE.blackBackColor,LOGSTYLE.vueBackColor,LOGSTYLE.lightRed)
+
       return new Promise((resolve,reject)=>{
         deleteHttpAction(
           {
-            itemKey:self_id
+            itemKey
           }
         ).then((response)=>{
-          if (response.code ==1)
+          if (response.code === 1)
           {
             console.log("删除"+interfaceType +"成功")
             commit('deleteInterfaceConfigItem',{parent_index,self_id,interfaceType})
@@ -283,18 +289,9 @@ export default new Vuex.Store({
       return new Promise((resolve, reject)=>{
 
         let promise = getHttpModuleList()
-        /*await axios({
-          method:'post',
-          url:'http://192.168.15.16:8482/educloud-report/report/getHttpModuleList',
-
-        }).then(function (response) {
-          //console.log(response.data.list)
-          commit('setModuleConfig',response.data.list)
-
-        })*/
 
         promise.then(res =>{
-          commit('setModuleConfig',res.list)
+          commit('initSetModuleConfig',res.list)
           resolve()
         }).catch(error =>{
           alert("error 666")
@@ -306,16 +303,19 @@ export default new Vuex.Store({
     },
     async fillInterfaceConfig({commit}){
       await getHttpActionList().then((response)=>{
+        console.log(response.list)
         commit('initSetHttpActionConfig',response.list)
+      }).catch((error)=>{
+        console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
       })
 
     },
     switchCreateInterfaceConfirm({commit},{status}){
       commit('setCreateInterfaceConfirmStatus',status)
-      //this.addInterfaceConfig({})
+
     },
     addHttpActionInterface({commit},{index,name,interfaceNodeKey}){
-
+        console.log("添加的接口的 itemKey为:" + interfaceNodeKey)
         let currentDate = new Date()
         console.log(index,name,interfaceNodeKey)
         let item = {
@@ -364,8 +364,8 @@ export default new Vuex.Store({
         console.log(item)
       return new Promise((resolve, reject) => {
         addHttpAction(item).then((response)=>{
-            if (response.code !== 0){
-              console.log("添加 HttpAction 成功")
+            if (response.code === 1){
+              console.log("%c 添加 HttpAction 成功",LOGSTYLE.vueBackColor)
               commit('setHttpActionInterface',{index,item})
               resolve(response)
             }

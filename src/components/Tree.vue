@@ -86,7 +86,7 @@
         {
           let newChild = {};
           newChild = {
-            id: nodeKeyId += 1,
+            id: nodeKeyId ++,
             labelName: "Module",
             children: []
           };
@@ -120,15 +120,14 @@
             console.log("in infinite")
             let interfaceType = "HttpAction"
             let labelName = "interface" + j
-
+            interfaceNodeKey = (++childrenNodeKeyID) // 接口节点的 ID +1
             let newChild = {
-              id:  childrenNodeKeyID += 1, //子节点个数增长
+              id:  interfaceNodeKey,
               labelName,
               interfaceType
             };
-            childrenNodeLength += 1
-            // 标识ID 增长
-            interfaceNodeKey = childrenNodeKeyID
+            childrenNodeLength += 1 //总共接口数 +1
+
             if (!this.thatNode.childNodes[i].data.children) {
               this.thatNode.childNodes[i].$set(this.thatNode.childNodes[i].data, 'children', []);
             }
@@ -140,7 +139,7 @@
 
         }
       }).catch(()=>{
-            console.log("渲染接口失败")
+            console.log("最终失败")
       })
         /*
         * 首先明白一点，数据已经在store中发ajax读过来了，也处理好了，我不需要塞数据到tree里面，我只需要正确的构建出 tree 就行
@@ -150,7 +149,7 @@
     methods:{
 
       renderContent(h,{node,data}){  //每生成一个节点，就会触发渲染
-        console.log("%c render function be called in Tree Component",LOGSTYLE.lightRed)
+        //console.log("%c render function be called in Tree Component",LOGSTYLE.lightRed)
 
         if (node.level === 1)
         {
@@ -169,7 +168,7 @@
         // 并且注重这几个 if 的排序
         if (node.level === 2 && node.childNodes.length === 0 && childrenNodeKeyID > 0)
         {
-          let n = node.data.id - 1
+          let n = node.data.id
           console.log("要去的下标是：" + n)
           return (
             <span>
@@ -188,7 +187,7 @@
         {
           return (
             <span>
-              {this.getModuleConfig[node.data.id - 1].name}
+              {this.getModuleConfig[node.data.id].name}
               <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
               <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
@@ -205,7 +204,7 @@
 
           return (
             <span>
-              {this.getModuleConfig[node.data.id - 1].name}
+              {this.getModuleConfig[node.data.id].name}
               <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
               <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
               <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
@@ -232,15 +231,14 @@
       append(node){
         event.stopPropagation();// 阻止冒泡给nodeClick
         const data = node.data //node 代表当前节点，不是这个加号
-        let labelname = ""
+
         let newChild = {};
 
         if(node.level === 1){ //在根目录下新建的时候 添加一个模块
-          let index = node.childNodes.length ; //作为 itemKey的值
 
-          this.addModuleConfig(index).then((response)=>{
+          this.addModuleConfig(nodeKeyId + childrenNodeKeyID).then(()=>{
             newChild = {
-              id: nodeKeyId += 1,
+              id: nodeKeyId,
               labelName: "Module",
               children: []
             };
@@ -250,12 +248,11 @@
             }
             data.children.push(newChild); //增加子节点
             node.expanded = true  //展开父级
-            this.$router.push({name:'ModuleConfig',params:{index:(nodeKeyId -1)}}) // 添加成功后跳转路由
+            this.$router.push({name:'ModuleConfig',params:{index:(nodeKeyId)}}) // 添加成功后跳转路由
+            nodeKeyId += 1 //
+            console.log("%c 添加HttpModule成功",LOGSTYLE.vueBackColor)
           }).catch((error)=>{
-            console.log("没有添加成功")
-          }).finally(()=>{
-            console.log("外层promise 结束")
-            return
+            console.log("%c 添加HttpModule失败,原因:" + error,LOGSTYLE.errorBackColor)
           })
 
         }
@@ -277,20 +274,18 @@
         const children = parent.data.children || parent.data;
 
         childrenNodeKeyID -= node.childNodes.length // 清除模块下的子节点
-        console.log("index:" + (node.data.id - 1))
 
         //删除 对应的ModuleConfig item
-        this.deleteModuleConfig(node.data.id - 1).then((response)=>{
-          console.log("删除成功")
-          //nodeKeyId -= 1; // 下标减一
+        this.deleteModuleConfig(node.data.id).then((response)=>{
+          console.log("%c 删除HttpModule成功",LOGSTYLE.vueBackColor)
+          //nodeKeyId --; // 下标不能减一，否则产生bug
 
           //删除tree node
           const index = children.findIndex(d => d.id === data.id);
           children.splice(index, 1);
-
-          this.$router.push('/')
+          this.$router.push('/') //关闭右侧路由页面
         }).catch((error)=>{
-          console.log("删除失败")
+          console.log("%c 删除失败,原因:" + error,LOGSTYLE.errorBackColor)
         })
 
 
@@ -301,11 +296,22 @@
         const parent = node.parent;
         const children = parent.data.children || parent.data;
 
-        let parent_index = parent.data.id - 1;
+        let parent_index = parent.data.id;
         let self_id = node.data.id;
 
         let interfaceType = node.data.interfaceType
-        this.deleteInterfaceConfig({parent_index,self_id,interfaceType})//并且删除 对应的InterfaceConfig item
+        /* 找到当前节点所在父节点的下标*/
+        let currentChildNodeindex
+        for (let i = 0 ; i < node.parent.childNodes.length ;i++)
+        {
+          if (node.parent.childNodes[i].data.id === node.data.id)
+          {
+            currentChildNodeindex = i
+            break
+          }
+        }
+        console.log("%c 当前点击的节点是父节点的第" + currentChildNodeindex +"个元素",LOGSTYLE.lightRed)
+        this.deleteInterfaceConfig({parent_index,self_id,interfaceType,currentChildNodeindex})//并且删除 对应的InterfaceConfig item
         childrenNodeKeyID -= 1 // 下标减一
 
         // 删除对应的 tree node
@@ -314,7 +320,8 @@
       },
       showParameterEdit(obj,node){
         console.log("当前所点击节点的id 是:" + node.id)
-        console.log("当前所点击节点的data.id 是:" + node.data.id)
+        console.log("%c 当前所点击节点的data.id 是:" + node.data.id,LOGSTYLE.vueBackColor)
+
         console.log("Root下的节点数 已经增长到了:" + (nodeKeyId + childrenNodeKeyID )+ "个")
         console.log(("当前interface 的数量:" + childrenNodeKeyID))
 
@@ -328,7 +335,7 @@
             * node id是你点击的这个节点的ID
             * */
 
-            let n = node.data.id -1
+            let n = node.data.id
             console.log("---------总共子节点数不为0--------------");
             this.$router.push({name:'ModuleConfig',params:{index:(n)}})
             console.log("传递的 index 为：----****:" + n)
@@ -361,21 +368,21 @@
           method:'post',
           url:'http://192.168.15.16:8482/educloud-report/report/updateHttpModule',
           data:{
-            useCustomDialect:this.getModuleConfig[node.data.id -1].useCustomDialect,
-            batchSeperator:this.getModuleConfig[node.data.id -1].batchSeperator,
-            openQuote:this.getModuleConfig[node.data.id -1].openQuote,
-            identitySql:this.getModuleConfig[node.data.id -1].identitySql,
-            closeQuote:this.getModuleConfig[node.data.id -1].closeQuote,
-            pagingSqlTemplate:this.getModuleConfig[node.data.id -1].pagingSqlTemplate,
-            parameterPrefix:this.getModuleConfig[node.data.id -1].parameterPrefix,
-            supportsMultipleStatements:this.getModuleConfig[node.data.id -1].supportsMultipleStatements,
-            dbType:this.getModuleConfig[node.data.id -1].dbType,
-            dataSourceType:this.getModuleConfig[node.data.id -1].dataSourceType,
-            dbUser:this.getModuleConfig[node.data.id -1].dbUser,
-            dbPassword:this.getModuleConfig[node.data.id -1].dbPassword,
-            dbUrl:this.getModuleConfig[node.data.id -1].dbUrl,
+            useCustomDialect:this.getModuleConfig[node.data.id].useCustomDialect,
+            batchSeperator:this.getModuleConfig[node.data.id].batchSeperator,
+            openQuote:this.getModuleConfig[node.data.id].openQuote,
+            identitySql:this.getModuleConfig[node.data.id].identitySql,
+            closeQuote:this.getModuleConfig[node.data.id].closeQuote,
+            pagingSqlTemplate:this.getModuleConfig[node.data.id].pagingSqlTemplate,
+            parameterPrefix:this.getModuleConfig[node.data.id].parameterPrefix,
+            supportsMultipleStatements:this.getModuleConfig[node.data.id].supportsMultipleStatements,
+            dbType:this.getModuleConfig[node.data.id].dbType,
+            dataSourceType:this.getModuleConfig[node.data.id].dataSourceType,
+            dbUser:this.getModuleConfig[node.data.id].dbUser,
+            dbPassword:this.getModuleConfig[node.data.id].dbPassword,
+            dbUrl:this.getModuleConfig[node.data.id].dbUrl,
            // itemKey:node.data.id -1,
-            moduleKey:this.getModuleConfig[node.data.id -1].moduleKey,
+            moduleKey:this.getModuleConfig[node.data.id].moduleKey,
 
           }
         }).then((data)=>{
@@ -399,10 +406,9 @@
 
         let status = false
         this.switchCreateInterfaceConfirm({status})  //关闭对话框
-        let index = this.parentNode.data.id -1 //moduleConfig index
+        let index = this.parentNode.data.id //moduleConfig index
 
-
-        let interfaceNodeKey = 0; // 初始化
+        let interfaceNodeKey = childrenNodeKeyID + nodeKeyId; // 初始化
         let interfaceType = this.form.interfaceType
         /*
         * 此处的 index 代表要放入的 module node tree 的下标
@@ -410,13 +416,12 @@
         *
         * */
         let newChild = {
-          id:  childrenNodeKeyID += 1, //子节点个数增长
+          id:  interfaceNodeKey, //子节点个数增长
           labelName: this.form.name,
           interfaceType
         };
         childrenNodeLength += 1
-        // 标识ID 增长
-        interfaceNodeKey = childrenNodeKeyID
+        childrenNodeKeyID += 1
 
         let name = this.form.name   // interface name
 
