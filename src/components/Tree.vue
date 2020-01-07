@@ -1,14 +1,15 @@
 <template>
   <div id="tree-container">
     <el-tree
+      accordion
       :data="nodeData"
       :props="defaultProps"
       :render-content="renderContent"
       :highlight-current="true"
-      :accordion="true"
+
       node-key="id"
       @node-click="showParameterEdit"
-      :indent="12"
+      :indent="10"
       :expand-on-click-node="false"
     >
 
@@ -19,6 +20,9 @@
                :destroy-on-close="true"
     >
       <el-form :model="form">
+        <el-form-item label="接口itemkey" :label-width="formLabelWidth">
+          <el-input v-model="form.itemKey" autocomplete="off" :placeholder="'唯的一标识，有效值从' + availableKey + '开始'" />
+        </el-form-item>
         <el-form-item label="接口名称" :label-width="formLabelWidth">
           <el-input v-model="form.name" autocomplete="off" placeholder="良好的接口名能帮助你使用" />
         </el-form-item>
@@ -69,14 +73,27 @@
         parentNode:{},
         dialogFormVisible: true,
         form: {
+          itemKey:undefined,
           name: '',
           interfaceType: '',
         },
+        availableKey:"",
         formLabelWidth: '120px'
       }
     },
     computed:{
       ...mapGetters(['getModuleConfig','getCreateInterfaceConfirmStatus'])
+    },
+    watch:{
+      form:{
+        handler:function (val, oldVal){
+          this.form = val
+        },
+        deep:true  //深度监视 form 中的属性变化，
+      },
+      availableKey:function (val,oldVal) {
+        this.availableKey = val
+      }
     },
     async mounted() {
       console.log("%c this is a Tree Component",LOGSTYLE.blackBackColor)
@@ -114,15 +131,15 @@
           *  module node（模块节点） 通过拿到 root 节点，然后 root.childNodes[i]
           *  实际为已经存储好的： this.thatNode.childNodes[i], （直接用）
           * */
-          let interfaceNodeKey = 0; // 初始化,该属性用于标识node，用来删除
+
           // 一共四种接口，处理第一种：HttpAction
           for (let j = 0;j < this.getModuleConfig[i].interfaceConfig.HttpAction.length ; j++){
             console.log("in infinite")
             let interfaceType = "HttpAction"
-            let labelName = "interface" + j
-            interfaceNodeKey = (++childrenNodeKeyID) // 接口节点的 ID +1
+            let labelName = "HttpAction " + (j + 1)
+
             let newChild = {
-              id:  interfaceNodeKey,
+              id:  this.getModuleConfig[i].interfaceConfig.HttpAction[j].itemKey,
               labelName,
               interfaceType
             };
@@ -132,11 +149,15 @@
               this.thatNode.childNodes[i].$set(this.thatNode.childNodes[i].data, 'children', []);
             }
             this.thatNode.childNodes[i].data.children.push(newChild); //增加子节点
-            this.thatNode.childNodes[i].expanded = true  //展开父级
+
+
+            childrenNodeKeyID++// 接口节点的 ID +1
           }
           console.log("InterfaceConfig.HttpAction 处理完毕")
           // 处理第二种: HttpQueryAction
 
+          // 最终有效key 从 n开始
+          this.availableKey = childrenNodeKeyID + nodeKeyId
         }
       }).catch(()=>{
             console.log("最终失败")
@@ -148,7 +169,8 @@
     },
     methods:{
 
-      renderContent(h,{node,data}){  //每生成一个节点，就会触发渲染
+      renderContent(h,{node,data}){
+        //每生成一个节点，就会触发渲染
         //console.log("%c render function be called in Tree Component",LOGSTYLE.lightRed)
 
         if (node.level === 1)
@@ -169,14 +191,19 @@
         if (node.level === 2 && node.childNodes.length === 0 && childrenNodeKeyID > 0)
         {
           let n = node.data.id
-          console.log("要去的下标是：" + n)
+
           return (
             <span>
-              {this.getModuleConfig[n].name}
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
-              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
-              <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
-
+            {this.getModuleConfig[n].name}
+              <el-tooltip class="item" effect="dark" content="新增模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
+                <i class="el-icon-circle-plus plus" title="" on-click={() =>this.append(node)}/>
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="删除模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
+                <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeModuleNode(node, data)} />
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="保存/更新模块" placement="right">
+                <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentModule(node)}/>
+              </el-tooltip>
             </span>
           )
         }
@@ -185,13 +212,19 @@
         * */
         if (node.level === 2 && node.childNodes.length === 0 )
         {
+          let n = node.data.id
           return (
             <span>
-              {this.getModuleConfig[node.data.id].name}
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
-              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
-              <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
-
+              {this.getModuleConfig[n].name}
+              <el-tooltip class="item" effect="dark" content="新增模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
+                <i class="el-icon-circle-plus plus" title="" on-click={() =>this.append(node)}/>
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="删除模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
+                <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeModuleNode(node, data)} />
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="保存/更新模块" placement="right">
+                <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentModule(node)}/>
+              </el-tooltip>
             </span>
 
           )
@@ -201,26 +234,42 @@
         * */
         if (node.level === 2 && node.childNodes.length > 0)
         {
-
+          let n = node.data.id
           return (
             <span>
-              {this.getModuleConfig[node.data.id].name}
-              <i class="el-icon-circle-plus plus" title="新增模块" on-click={() =>this.append(node)}/>
-              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeModuleNode(node, data)} />
-              <i class="el-icon-s-claim save-current-module" title="保存模块" on-click={()=>this.saveCurrentModule(node)}/>
+              {this.getModuleConfig[n].name}
+
+              <el-tooltip class="item" effect="dark" content="新增模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
+                <i class="el-icon-circle-plus plus" title="" on-click={() =>this.append(node)}/>
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="删除模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
+                <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeModuleNode(node, data)} />
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="保存/更新模块" placement="right">
+                <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentModule(node)}/>
+              </el-tooltip>
             </span>
           )
         }
         if (node.level === 3 )
         {
           //console.log("在渲染接口,此时改模块下有1个接口,渲染的id为:" + n)
+          // 去看看 添加函数
           let val = "Interface"
           return (
-            <span>
-              {val}
-              <i class="el-icon-delete-solid delete" title="删除模块" on-click={() => this.removeInterfaceNode(node, data)} />
-              <i class="el-icon-s-claim save-current-module" title="保存接口" on-click={()=>this.saveCurrentInterface(node)}/>
+            <span class="outer-span">
+            {node.data.interfaceType + "" + node.data.id}
+            <span class="inner-span">
+            <el-tooltip class="item" effect="dark" content="删除接口" placement="bottom-end" hide-after={800} open-delay={1000} enterable={false}>
+              <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeInterfaceNode(node, data)} />
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="保存/更新接口" placement="bottom-end" hide-after={800} open-delay={1000} enterable={false}>
+              <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentInterface(node)}/>
+            </el-tooltip>
+
             </span>
+            </span>
+
 
           )
         }
@@ -312,8 +361,8 @@
         }
         console.log("%c 当前点击的节点是父节点的第" + currentChildNodeindex +"个元素",LOGSTYLE.lightRed)
         this.deleteInterfaceConfig({parent_index,self_id,interfaceType,currentChildNodeindex})//并且删除 对应的InterfaceConfig item
-        childrenNodeKeyID -= 1 // 下标减一
-
+        --childrenNodeKeyID // 下标减一
+        this.availableKey = childrenNodeKeyID + nodeKeyId
         // 删除对应的 tree node
         const index = children.findIndex(d => d.id === data.id);
         children.splice(index, 1)
@@ -334,12 +383,8 @@
             /*
             * node id是你点击的这个节点的ID
             * */
-
             let n = node.data.id
-            console.log("---------总共子节点数不为0--------------");
             this.$router.push({name:'ModuleConfig',params:{index:(n)}})
-            console.log("传递的 index 为：----****:" + n)
-
           }break;
           case 3:{
             this.$store.dispatch("saveCurrentInterfaceNode",node)
@@ -398,9 +443,13 @@
 
       },
       closeDialog(){
-        console.log("close")
+
         let status = false
         this.switchCreateInterfaceConfirm({status})
+        // clear form
+        this.form.name =""
+        this.form.interfaceType =""
+        this.form.itemKey = ""
       },
     async saveAndSwitch(){
 
@@ -408,7 +457,9 @@
         this.switchCreateInterfaceConfirm({status})  //关闭对话框
         let index = this.parentNode.data.id //moduleConfig index
 
-        let interfaceNodeKey = childrenNodeKeyID + nodeKeyId; // 初始化
+        let interfaceNodeKey = this.form.itemKey; // 初始化
+        console.log("当前子节点数:" + childrenNodeKeyID,"当前模块数:" + nodeKeyId)
+        console.log("itemKey == " + interfaceNodeKey)
         let interfaceType = this.form.interfaceType
         /*
         * 此处的 index 代表要放入的 module node tree 的下标
@@ -425,25 +476,40 @@
 
         let name = this.form.name   // interface name
 
+        /*
+        * index : 所处模块
+        * name  : 所取的临时名称
+        * interfaceNodeKey  :  itemKey 作为唯一标识，且用于CUID
+        * */
         switch (interfaceType) {
           case "HttpAction":{
            // console.log(index,name,interfaceNodeKey)
-            await this.addHttpActionInterface({index,name,interfaceNodeKey}).then((response)=>{
+            let mark = await this.addHttpActionInterface({index,name,interfaceNodeKey}).then((response)=>{
                 console.log(response.msg)
+                this.availableKey = childrenNodeKeyID + nodeKeyId
+                return true
               }).catch((error)=>{
                 console.log(error)
-                //console.log("执行return")
-
+                return false
               })
+            if(!mark){
+              return ;
+            }
           }break;
           case "HttpQueryAction":{
-            this.addHttpQueryActionInterface({index,name,interfaceNodeKey})
+            let mark =  this.addHttpQueryActionInterface({index,name,interfaceNodeKey})
+            //暂时不做后台
+            this.availableKey = childrenNodeKeyID + nodeKeyId
           }break;
           case "HttpActionReport":{
-
+            this.addHttpActionReportInterface({index,name,interfaceNodeKey})
+            //暂时不做后台
+            this.availableKey = childrenNodeKeyID + nodeKeyId
           }break;
           case "HttpQueryActionReport":{
-
+            this.addHttpQueryActionReportInterface({index,name,interfaceNodeKey})
+            //暂时不做后台
+            this.availableKey = childrenNodeKeyID + nodeKeyId
           }break;
           default:{
             alert("类型错误")
@@ -457,10 +523,19 @@
         }
         this.parentNode.data.children.push(newChild); //增加子节点
         this.parentNode.expanded = true  //展开父级
+
+      // clear form
+      this.form.name =""
+      this.form.interfaceType =""
+      this.form.itemKey = ""
       },
       cancel(){
         let status = false
         this.switchCreateInterfaceConfirm({status})
+        // clear form
+        this.form.name =""
+        this.form.interfaceType =""
+        this.form.itemKey = ""
       },
       ...mapActions(['fillModuleConfig',
         'fillInterfaceConfig',
@@ -469,7 +544,9 @@
         'deleteInterfaceConfig',
         'switchCreateInterfaceConfirm',
         'addHttpActionInterface',
-        'addHttpQueryActionInterface'
+        'addHttpQueryActionInterface',
+        'addHttpActionReportInterface',
+        'addHttpQueryActionReportInterface'
       ]),
 
     }

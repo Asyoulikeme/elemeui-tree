@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header>
-      <Test />
+
     </header>
     <div id="main-body">
       <div id="left-box">
@@ -20,14 +20,17 @@
 
 
   import Tree from './components/Tree';
-  import Test from './components/test';
-export default {
+  import {LOGSTYLE} from './assets/js/commons';
+
+  export default {
 
   components: {
     Tree,
-    Test
+  },
+    mounted() {
+
+    }
   }
-}
 </script>
 <style lang="scss">
 
@@ -70,12 +73,23 @@ export default {
   height: calc(100% - 105px);
   margin-top: 10px;
   #left-box{
-    width: 230px;
+    width: 290px;
     height: 100%;
     background: #ffffff;
     box-shadow: 0 2px 15px -8px rgba(0,0,0,.5);
     overflow: auto;
 
+    .outer-span{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      .inner-span{
+        display: block;
+        margin-right: 2rem;
+      }
+    }
     .root{
       margin:10px 0 0 10px;
     }
@@ -107,7 +121,7 @@ export default {
   }
 
   #right-box{
-    width: calc(100vw - 240px - 0px);
+    width: calc(100vw - 290px - 20px);
     height: 100%;
     background: #ffffff;
     border: 1px solid #ebebeb;
@@ -152,7 +166,9 @@ export default {
   .delete{
     opacity: .7;
     margin-left: 1rem;
+    font-size: 1.05rem;
     color: red;
+    font-weight: bold;
     &:hover{
       opacity: 1;
     }
@@ -161,6 +177,19 @@ export default {
     opacity: .7;
     margin-left: 1rem;
     color: #999999;
+    &:hover{
+      opacity: 1;
+    }
+  }
+  .save-current-interface{
+    display: inline-block;
+    font-size: 1.25rem;
+    margin-left: 1rem;
+    *border:1px solid red;
+    font-weight: bold;
+    opacity: .8;
+    transform: translateY(.079rem);
+    color: #333333;
     &:hover{
       opacity: 1;
     }

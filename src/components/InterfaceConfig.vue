@@ -1,200 +1,152 @@
 <template>
-  <div id="">
-    <el-collapse accordion>
-      <el-collapse-item v-for="(HttpAction,indexof) in getHttpActionInterfaceConfig" :key="indexof">
+  <div id="interface-container">
 
-          <div slot="title" class="title-desc">
-            HttpAction -- {{HttpAction.actionName}}<i class="header-icon el-icon-info"></i>
-          </div>
-          <el-form :model="HttpAction">
-            <el-form-item label="接口名称" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.actionName" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="接口ID" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.actionId" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="itemKey" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.itemKey" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="接口类型" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.actionType" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="AppID" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.appId" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="插入时间" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.insertTime" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="插入用户ID" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.insertUserId" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="method">
-              <el-radio-group v-model="HttpAction.method">
-                <el-radio label="GET"></el-radio>
-                <el-radio label="POST"></el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="所属模块" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.module" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="release">
-              <el-radio-group v-model="HttpAction.release">
-                <el-radio label="true"></el-radio>
-                <el-radio label="false"></el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="returnType" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.returnType" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="sql" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.sql" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="sqlColumns[0].name" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.sqlColumns[0].name" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="sqlColumns[0].type" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.sqlColumns[0].type" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="sqlParams[0].name" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.sqlParams[0].name" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="sqlParams[0].type" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.sqlParams[0].type" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="sqlParams[0].value" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.sqlParams[0].value" autocomplete="off" placeholder="请填写json格式字符串"></el-input>
-            </el-form-item>
-            <el-form-item label="updateTime" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.updateTime" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="updateTime" :label-width="formLabelWidth">
-              <el-input v-model="HttpAction.updateUserId" autocomplete="off"></el-input>
-            </el-form-item>
-          </el-form>
+      <i class="iconfont ext-icon-view eye" title="隐藏模块信息" v-if="eyeStatus" @click="setEyeStatus(false)" />
+      <i class="iconfont ext-icon-view-off eye" title="显示模块信息" v-else @click="setEyeStatus(true)" />
 
-      </el-collapse-item>
-    </el-collapse>
-    <el-collapse accordion>
-      <el-collapse-item v-for="(HttpQueryAction,indexof) in getHttpQueryActionInterfaceConfig" :key="indexof">
-        <div slot="title" class="title-desc">
-          HttpQueryAction -- {{HttpQueryAction.actionName}}<i class="header-icon el-icon-info"></i>
-        </div>
-        <el-form :model="HttpQueryAction">
-          <el-form-item label="接口名称" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.actionName" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="接口ID" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.actionId" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="sqlSelect" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.sqlSelect" autocomplete="off"></el-input>
-          </el-form-item>
-          <!--sqlColumns object array-->
-          <fieldset>
-            <legend>sqlColumns</legend>
-          <el-form-item label="sqlColumns" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.sqlColumns.name" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="sqlColumns" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.sqlColumns.type" autocomplete="off"></el-input>
-          </el-form-item>
-          </fieldset>
-          <!--conditions object array-->
-          <fieldset>
-            <legend>conditions</legend>
-          <el-form-item label="appId" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.appId" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="condictionId" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.condictionId" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="conditionType" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.conditionType" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="groupOperator" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.groupOperator" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="inserTime" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.inserTime" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="insertUserId" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.insertUserId" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="isGroup" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.isGroup" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="release" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.release" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="updateTime" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.updateTime" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="updateUserId" :label-width="formLabelWidth">
-            <el-input v-model="HttpQueryAction.conditions.updateUserId" autocomplete="off"></el-input>
-          </el-form-item>
-          </fieldset>
-        </el-form>
-      </el-collapse-item>
-    </el-collapse>
+    <HttpAction />
+    <HttpQueryAction />
+    <HttpActionReport />
+    <HttpQueryActionReport />
   </div>
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
-
-  /*
-  * 这个组件的显示有点复杂，
-  * 首先要弄 四个 el-collapse-item
-  * */
+  import {mapState} from 'vuex'
+  import HttpQueryAction from './interfaceConfig/HttpQueryAction';
+  import HttpAction from './interfaceConfig/HttpAction';
+  import HttpActionReport from './interfaceConfig/HttpActionReport'
+  import HttpQueryActionReport from './interfaceConfig/HttpQueryActionReport';
   export default {
     name: 'InterfaceConfig',
-    data(){
-      return{
-
-        formLabelWidth: '120px',
-        index: this.$route.params.index
-      }
+    components:{
+      HttpAction,
+      HttpQueryAction,
+      HttpActionReport,
+      HttpQueryActionReport
     },
     computed:{
-
-      getHttpActionInterfaceConfig(){
-        return this.$store.state.moduleConfig[this.index].interfaceConfig.HttpAction
-      },
-      getHttpQueryActionInterfaceConfig(){
-        return this.$store.state.moduleConfig[this.index].interfaceConfig.HttpQueryAction
-      }
+      ...mapState(['eyeStatus'])
     },
-    watch:{
-      '$route'(to,from){
-        //console.log(to,from)
-        this.index = to.params.index  //获取实时最新的 后缀 index，然后index 变化时，整个表单变化
+    methods:{
+      setEyeStatus(val){
+        this.$store.commit('setEyeStatus',{val})
       }
-    },
+    }
   };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
+ #interface-container{
 
-.el-collapse{
-  width: 500px;
-  min-height: 80%;
-  margin-top: 20px;
+   width: 580px;
+   display: flex;
+   justify-content: center;
+   align-items: flex-start;
+   flex-wrap: wrap;
+   flex-direction: row;
+   box-shadow: 0 2px 15px -20px #000000,
+   0 0 13px -11px #000000;
+   padding-top: 3rem;
+   position: relative;
+   .eye{
+     display: block;
+     position: absolute;
+     top: 1.5rem;
+     left: 50%;
+     transform: translateX(-50%);
+     font-size: 2rem;
+     opacity: .5;
+     &:hover{
+       cursor: pointer;
+       opacity: 1;
+     }
+   }
+   .el-collapse{
+     width: 80%;
+     border-bottom:0 ;
+     border-top: 0;
+     margin-top: 40px;
+     transition:box-shadow .2s ease-in;
 
-  border: none;
+     .el-collapse-item__header{
+       margin-left: 1rem;
+     }
+     .el-collapse-item{
+       &:first-child{
+         border-top:1px solid #EBEEF5;
+       }
 
-  position: relative;
-  .empty-holder{
-    font-size:1rem;
-    font-weight: bold;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-50%);
-  }
+       transition: all .3s ease;
+       &:hover{
+         transform: rotateY(-10deg);
+       }
+     }
+     .el-form {
+       width: 100%;
+       height: auto;
+       margin-top: 20px;
+       position: relative;
+       &:hover{
 
-}
-.title-desc{
-  text-indent: 1rem !important;
-}
+       }
+       fieldset{
+
+         display: flex;
+         justify-content: center;
+         align-items: flex-start;
+         padding-top: 1.5rem;
+         padding-bottom: 0;
+         overflow: hidden;
+         border: 1px solid #999999;
+         text-indent: 0;
+         color: #999999;
+         margin-bottom: 2rem;
+         position: relative;
+         &:hover{
+           color: #409eff;
+           border: 1px solid #409eff;
+         }
+         .el-icon-circle-plus{
+           position: absolute;
+           right: 10px;
+           top: 25px;
+           transition: all .5s ease;
+           color: #409eff;
+           &:hover{
+             cursor: pointer;
+           }
+         }
+         .el-collapse{
+           width: 100%;
+           &:hover{
+             box-shadow: none;
+           }
+         }
+         .el-collapse-item__header{
+           margin-left: 1rem;
+         }
+       }
+
+       .el-input__inner {
+         width: 80%;
+
+       }
+       .el-select{
+         width: 100%;
+         .el-input__suffix{
+           width: 100%;
+           .el-input__suffix-inner{
+             position: absolute;
+             right: 0;
+             transform: translateX(-70px);
+           }
+         }
+       }
+     }
+   }
+
+ }
+
 
 </style>

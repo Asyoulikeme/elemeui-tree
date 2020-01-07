@@ -1,6 +1,6 @@
 <template>
-  <div class="module-interface-container">
-    <div class="module-config-container">
+  <div class="module-container">
+    <div v-show="eyeStatus" :class="{'module-config-container':true,'move-right':eyeStatus}">
       <el-form :model="getModuleConfig[index]">
         <el-form-item label="moduleKey" :label-width="formLabelWidth">
           <el-input v-model="getModuleConfig[index].moduleKey" placeholder="主键" autocomplete="off"></el-input>
@@ -69,7 +69,7 @@
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
+  import { mapGetters, mapState } from 'vuex';
   import InterfaceConfig from './InterfaceConfig';
   export default {
     name: 'ModuleConfig',
@@ -92,6 +92,7 @@
       InterfaceConfig
     },
     computed:{
+      ...mapState(['eyeStatus']),
       ...mapGetters(['getModuleConfig'])
     },
     watch:{
@@ -100,18 +101,12 @@
         this.index = to.params.index  //获取实时最新的 后缀 index，然后index 变化时，整个表单变化
 
       }
-    },
-    methods:{
-
-    },
-    mounted() {
-
     }
   };
 </script>
 
 <style lang="scss">
-  .module-interface-container{
+  .module-container{
     *border: 1px solid red;
     width: 100%;
     height: 100%;
@@ -119,9 +114,23 @@
     align-items: flex-start;
     justify-content: space-around;
 
+    .move-right{
+      animation: move .3s  cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes move {
+      from{
+        transform: translateX(-50%);
+      }
+      to{
+        transform: translateX(0);
+      }
+    }
     .module-config-container{
       width: 460px;
-
+      box-shadow: 0 2px 15px -20px #000000,
+      0 0 13px -11px #000000;
+      transition: all .5s ease;
+      transform: translateX(-50%);
     }
     .el-form{
       width: 100%;
@@ -149,20 +158,7 @@
       }
 
 
-      fieldset{
-        width: 100%;
-        text-indent: .5rem;
-        border: none;
-        border-top: 1px solid #EBEEF5;
 
-        color: #999999;
-        margin-bottom: 2rem;
-        padding: 1.5rem 0;
-
-        &:hover{
-          background: #f4f4f4;
-        }
-      }
     }
 
 

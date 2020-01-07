@@ -158,7 +158,5 @@ moduleConfig = [
 
 
 ## 之后要解决的问题
-
-- 处理一下不起作用的return saveAndSwitch 的 switch 中
-- 完成 HttpQueryAction 的编辑
-  - 此接口好像有sql 拼接，递归的对象嵌套，生成
+> 四大类型的接口结构以及设计好了，就等后台重新写后再配合后台写动态存储。
+> 后续的工作是查bug

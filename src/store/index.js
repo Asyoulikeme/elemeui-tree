@@ -10,9 +10,13 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     createInterfaceConfirm:false,
+    eyeStatus:false,
     moduleConfig:[
+      // 所有的关键数据都存储在这里
     ],
-    interfaceCollection:[]
+    interfaceCollection:[
+      // 处理后的四大类接口信息存储在这里
+    ]
   },
   getters:{
 
@@ -28,6 +32,10 @@ export default new Vuex.Store({
     //对话框状态处理
     setCreateInterfaceConfirmStatus(state,status){
       state.createInterfaceConfirm = status
+    },
+    // 小眼睛的状态处理
+    setEyeStatus(state,{val}){
+      state.eyeStatus = val
     },
     //添加模块时前端数据结构的变化
     pushEmptyModuleConfig(state,item){
@@ -132,49 +140,17 @@ export default new Vuex.Store({
     },
     //
     setHttpActionInterface(state,{index,item}){
-      console.log("视图层数据结构操作被调用")
-      console.log("添加到下标为" + index + "的模块中去")
+
       state.moduleConfig[index].interfaceConfig.HttpAction.push(item)
     },
-    setHttpQueryActionInterface(state,{index,name,interfaceNodeKey}){
-      state.moduleConfig[index].interfaceConfig.HttpQueryAction.push({
-        interfaceNodeKey:interfaceNodeKey,
-        appId:'',
-        actionId:'',
-        actionName:name,
-        sqlSelect:'',
-        sqlColumns:[
-          {
-            name:'',
-            type:''
-          }
-        ],
-        conditions:[
-          {
-            appId:'',
-            condictionId:'',
-            conditionType:'',
-            groupOperator:'',
-            inserTime:Date,
-            insertUserId:'',
-            isGroup:'',
-            release:'',
-            updateTime:Date,
-            updateUserId:''
-          }
-        ],
-        sorts:[
-          {
-            coumnName:'',
-            isAscending:Boolean,
-            sortId:''
-          }
-        ],
-        itemKey:'',
-        method:'',
-        module:''
-
-      })
+    setHttpQueryActionInterface(state,{index,item}){
+      state.moduleConfig[index].interfaceConfig.HttpQueryAction.push(item)
+    },
+    setHttpActionReportInterface(state,{index,item}){
+      state.moduleConfig[index].interfaceConfig.HttpActionReport.push(item)
+    },
+    setHttpQueryActionReportInterface(state,{index,item}){
+      state.moduleConfig[index].interfaceConfig.HttpQueryActionReport.push(item)
     }
   },
   actions: {
@@ -285,7 +261,7 @@ export default new Vuex.Store({
       })
 
     },
-     fillModuleConfig({commit}){
+    fillModuleConfig({commit}){
       return new Promise((resolve, reject)=>{
 
         let promise = getHttpModuleList()
@@ -319,15 +295,15 @@ export default new Vuex.Store({
         let currentDate = new Date()
         console.log(index,name,interfaceNodeKey)
         let item = {
-          actionId:'',
+          actionId:'',  // hidden
           actionName:'New HttpAction',
           actionType:'None',
-          appId:'',
+          appId:'', // hidden
           insertTime: "",
           insertUserId:'',
-          itemKey:interfaceNodeKey + "",
-          method:'',
-          module:index,
+          itemKey:interfaceNodeKey + "", // hidden
+          method:'',  // hidden
+          module:index, // hidden
           release:"false",
           returnType:'',
           sql:'',
@@ -361,7 +337,7 @@ export default new Vuex.Store({
           * */
           updateUserId:''
         }
-        console.log(item)
+        //console.log(item)
       return new Promise((resolve, reject) => {
         addHttpAction(item).then((response)=>{
             if (response.code === 1){
@@ -382,7 +358,124 @@ export default new Vuex.Store({
 
     },
     addHttpQueryActionInterface({commit},{index,name,interfaceNodeKey}){
-      commit('setHttpQueryActionInterface',{index,name,interfaceNodeKey})
+      let item = {
+        appId:'', // hidden
+        actionId:'',  // hidden
+        actionName:name,
+        sqlSelect:'',
+        sqlColumns:[
+          {
+            name:'',
+            type:''
+          }
+        ],
+        conditions:[
+          {
+            appId:'',
+            condictionId:'',
+            conditionType:'',
+            groupOperator:'',
+            isGroup:'',   //Boolean
+            release:'',   //Boolean
+            inserTime:"",   //Date
+            insertUserId:'',
+            updateTime:"",  //Date
+            updateUserId:''
+          }
+        ],
+        sorts:[
+          {
+            sortId:'',
+            coumnName:'',
+            isAscending:Boolean
+          }
+        ],
+        itemKey:interfaceNodeKey + "", // hidden
+        method:'',  // hidden
+        module:index  // hidden
+
+      }
+      commit('setHttpQueryActionInterface',{index,item})
+    },
+    addHttpActionReportInterface({commit},{index,name,interfaceNodeKey}){
+      let item =  {
+        appId:'', // hidden
+        actionId:'',  // hidden
+        actionName:name,
+        sqlSelect:'',
+        sqlColumns:[
+          {
+            name:'',
+            type:''
+          }
+        ],
+        conditions:[
+          {
+            appId:'',
+            condictionId:'',
+            conditionType:'',
+            groupOperator:'',
+            isGroup:'',   //Boolean
+            release:'',   //Boolean
+            inserTime:"",   //Date
+            insertUserId:'',
+            updateTime:"",  //Date
+            updateUserId:''
+          }
+        ],
+        sorts:[
+          {
+            sortId:'',
+            coumnName:'',
+            isAscending:Boolean
+          }
+        ],
+        itemKey:interfaceNodeKey + "", // hidden
+        method:'',  // hidden
+        module:index  // hidden
+
+      }
+      commit('setHttpActionReportInterface',{index,item})
+    },
+    addHttpQueryActionReportInterface({commit},{index,name,interfaceNodeKey}){
+      let item =  {
+        appId:'', // hidden
+        actionId:'',  // hidden
+        actionName:name,
+        sqlSelect:'',
+        sqlColumns:[
+          {
+            name:'',
+            type:''
+          }
+        ],
+        conditions:[
+          {
+            appId:'',
+            condictionId:'',
+            conditionType:'',
+            groupOperator:'',
+            isGroup:'',   //Boolean
+            release:'',   //Boolean
+            inserTime:"",   //Date
+            insertUserId:'',
+            updateTime:"",  //Date
+            updateUserId:''
+          }
+        ],
+        sorts:[
+          {
+            sortId:'',
+            coumnName:'',
+            isAscending:Boolean
+          }
+        ],
+        itemKey:interfaceNodeKey + "", // hidden
+        method:'',  // hidden
+        module:index  // hidden
+
+      }
+      commit('setHttpQueryActionReportInterface',{index,item})
     }
   },
   modules: {
