@@ -10,7 +10,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     createInterfaceConfirm:false,
-    eyeStatus:false,
+    eyeStatus:true,
     moduleConfig:[
       // 所有的关键数据都存储在这里
     ],
@@ -134,21 +134,25 @@ export default new Vuex.Store({
         }
         catch (e) {
           console.log(e)
+          //为防止异常情况发生，请查看输出中的list，参照list 中的 module 值来确认该HttpAction属于哪一个模块
           console.warn("%c 有一个接口渲染失败,原因:" + "数据库中没有属于该接口的模块",LOGSTYLE.errorBackColor)
         }
       }
     },
-    //
+    //添加HttpAction接口后时前端数据结构的变化
     setHttpActionInterface(state,{index,item}){
 
       state.moduleConfig[index].interfaceConfig.HttpAction.push(item)
     },
+    //添加 HttpQueryAction 接口后时前端数据结构的变化
     setHttpQueryActionInterface(state,{index,item}){
       state.moduleConfig[index].interfaceConfig.HttpQueryAction.push(item)
     },
+    //添加 HttpActionReport 接口后时前端数据结构的变化
     setHttpActionReportInterface(state,{index,item}){
       state.moduleConfig[index].interfaceConfig.HttpActionReport.push(item)
     },
+    //添加 HttpQueryActionReport 接口后时前端数据结构的变化
     setHttpQueryActionReportInterface(state,{index,item}){
       state.moduleConfig[index].interfaceConfig.HttpQueryActionReport.push(item)
     }
@@ -216,7 +220,10 @@ export default new Vuex.Store({
           itemKey:key
         }).then((response)=>{
           if (response.code === 1)
-          resolve(response)
+          {
+            response.key = key
+            resolve(response)
+          }
           else
           reject(response.msg)
 
@@ -226,6 +233,7 @@ export default new Vuex.Store({
       })
 
     },
+    // 删除接口的异步
     deleteInterfaceConfig({state,commit},{parent_index,self_id,interfaceType,currentChildNodeindex}){
       console.log(parent_index,self_id,interfaceType,currentChildNodeindex)
       /*
@@ -233,6 +241,9 @@ export default new Vuex.Store({
       * self_id       当前节点的 node.data.id
       * interfaceType 确保删除某个类型的节点
       * currentChildNodeindex   当前节点在模块的第 n 个下标位置，也就代表了要用itemKey 来删除
+      * */
+      /*
+      * 当前函数仅仅是删除 HttpAction ,等后台做完了再在这个函数里面写其它的几个接口
       * */
 
       let itemKey = state.moduleConfig[parent_index].interfaceConfig[interfaceType][currentChildNodeindex].itemKey
@@ -261,6 +272,7 @@ export default new Vuex.Store({
       })
 
     },
+    // 读取模块信息并初始化
     fillModuleConfig({commit}){
       return new Promise((resolve, reject)=>{
 
@@ -277,19 +289,30 @@ export default new Vuex.Store({
 
 
     },
-    async fillInterfaceConfig({commit}){
-      await getHttpActionList().then((response)=>{
-        console.log(response.list)
-        commit('initSetHttpActionConfig',response.list)
-      }).catch((error)=>{
-        console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
+    // 读取接口信息并初始化
+    fillInterfaceConfig({commit}){
+      return new Promise((resolve, reject)=>{
+        getHttpActionList().then((response)=>{
+          if (response.code === 1)
+          {
+            console.log(response.list)
+            commit('initSetHttpActionConfig',response.list)
+            resolve();
+          }
+          else
+            reject(response)
+        }).catch((error)=>{
+          console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
+        })
       })
 
     },
+    // 确认对话框的状态改变
     switchCreateInterfaceConfirm({commit},{status}){
       commit('setCreateInterfaceConfirmStatus',status)
 
     },
+    // 添加HttpAction时的异步
     addHttpActionInterface({commit},{index,name,interfaceNodeKey}){
         console.log("添加的接口的 itemKey为:" + interfaceNodeKey)
         let currentDate = new Date()
@@ -357,6 +380,7 @@ export default new Vuex.Store({
       })
 
     },
+    // 添加HttpQueryAction时的异步
     addHttpQueryActionInterface({commit},{index,name,interfaceNodeKey}){
       let item = {
         appId:'', // hidden
@@ -397,6 +421,7 @@ export default new Vuex.Store({
       }
       commit('setHttpQueryActionInterface',{index,item})
     },
+    // 添加HttpActionReport时的异步
     addHttpActionReportInterface({commit},{index,name,interfaceNodeKey}){
       let item =  {
         appId:'', // hidden
@@ -437,6 +462,7 @@ export default new Vuex.Store({
       }
       commit('setHttpActionReportInterface',{index,item})
     },
+    // 添加HttpQueryActionReport时的异步
     addHttpQueryActionReportInterface({commit},{index,name,interfaceNodeKey}){
       let item =  {
         appId:'', // hidden
@@ -477,7 +503,5 @@ export default new Vuex.Store({
       }
       commit('setHttpQueryActionReportInterface',{index,item})
     }
-  },
-  modules: {
-  },
+  }
 });

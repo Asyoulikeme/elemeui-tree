@@ -1,14 +1,13 @@
 <template>
   <div id="app">
     <header>
-
+      <h2>HttpActions</h2>
     </header>
     <div id="main-body">
       <div id="left-box">
         <Tree />
       </div>
       <div id="right-box">
-        <!--<ModuleConfig v-for="(ModuleItem,index) in getModuleConfig" :key="index" :ModuleItem="ModuleItem"/>-->
         <router-view />
       </div>
 

@@ -1,5 +1,5 @@
 <template>
-  <div id="interface-container">
+  <div id="interface-container" v-show="totalInterfaceLength > 0">
 
       <i class="iconfont ext-icon-view eye" title="隐藏模块信息" v-if="eyeStatus" @click="setEyeStatus(false)" />
       <i class="iconfont ext-icon-view-off eye" title="显示模块信息" v-else @click="setEyeStatus(true)" />
@@ -19,6 +19,9 @@
   import HttpQueryActionReport from './interfaceConfig/HttpQueryActionReport';
   export default {
     name: 'InterfaceConfig',
+    props:{
+      index:Number
+    },
     components:{
       HttpAction,
       HttpQueryAction,
@@ -26,7 +29,17 @@
       HttpQueryActionReport
     },
     computed:{
-      ...mapState(['eyeStatus'])
+      ...mapState(['eyeStatus','moduleConfig']),
+      totalInterfaceLength(){
+        /* 只有当四大接口里面有记录时才显示接口信息一览 */
+        let typeLength = 0
+        typeLength += this.moduleConfig[this.index].interfaceConfig.HttpAction.length
+        typeLength += this.moduleConfig[this.index].interfaceConfig.HttpQueryAction.length
+        typeLength += this.moduleConfig[this.index].interfaceConfig.HttpActionReport.length
+        typeLength += this.moduleConfig[this.index].interfaceConfig.HttpQueryActionReport.length
+
+        return typeLength
+      }
     },
     methods:{
       setEyeStatus(val){
@@ -40,6 +53,7 @@
  #interface-container{
 
    width: 580px;
+   min-height: 516px;
    display: flex;
    justify-content: center;
    align-items: flex-start;

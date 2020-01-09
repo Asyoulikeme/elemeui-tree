@@ -19,23 +19,5 @@
     vueBackColor:"background:#4fc08d;color:#ffffff;" + BASE_STYLE,
     errorBackColor:"background:red;color:#ffffff;text-shadow:1px 1px 1px #000000;" + BASE_STYLE,
     warnBackColor:'',
-    lightRed:'background:#ec7259;color:#ffffff;' + BASE_STYLE,
-    Modifier:{
-      clbr:(STYLE)=>{
-        /*
-         * 取到STYLE
-         * LOGSTYLE.vueBackColor.Modifier.ClearLeftBorderRadius
-         * 链式调用 .clbr，则修改样式，去掉左边的圆角
-         * */
-        return STYLE += "border-radius: 0 3px 3px 0";
-      },
-      crbr:(STYLE)=>{
-        /*
-         * 取到STYLE
-         * LOGSTYLE.vueBackColor.Modifier.ClearRightBorderRadius
-         * 链式调用 .crbr，则修改样式，去掉右边的圆角
-         * */
-        return STYLE += "border-radius: 3px 0 0 3px";
-      }
-    }
+    lightRed:'background:#ec7259;color:#ffffff;' + BASE_STYLE
   }

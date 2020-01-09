@@ -63,7 +63,7 @@
         </div>
       </el-form>
     </div>
-    <InterfaceConfig />
+    <InterfaceConfig :index="index"/>
   </div>
 
 </template>
@@ -159,6 +159,10 @@
 
 
 
+    }
+    .custom-container{
+      padding-top: 40px;
+      border-top: 1px solid #ebebeb;
     }
 
 

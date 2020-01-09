@@ -38,7 +38,6 @@
     },
     data(){
       return{
-        dialogFormVisible: true,
         form: {
           name: '',
           region: '',

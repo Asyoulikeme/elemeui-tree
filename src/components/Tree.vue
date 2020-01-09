@@ -28,10 +28,10 @@
         </el-form-item>
         <el-form-item label="接口类型" :label-width="formLabelWidth">
           <el-select v-model="form.interfaceType" placeholder="请选择接口类型">
-            <el-option label="HttpAction" value="HttpAction"></el-option>
-            <el-option label="HttpQueryAction" value="HttpQueryAction"></el-option>
-            <el-option label="HttpActionReport" value="HttpActionReport"></el-option>
-            <el-option label="HttpQueryActionReport" value="HttpQueryActionReport"></el-option>
+            <el-option label="HttpAction" value="HttpAction" />
+            <el-option label="HttpQueryAction" value="HttpQueryAction" />
+            <el-option label="HttpActionReport" value="HttpActionReport" />
+            <el-option label="HttpQueryActionReport" value="HttpQueryActionReport" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -45,7 +45,7 @@
 
 <script>
 
-  import {mapState,mapGetters,mapActions} from 'vuex'
+  import {mapGetters,mapActions} from 'vuex'
   import {LOGSTYLE} from '../assets/js/commons';
   import axios from 'axios'
   let nodeKeyId = 0; // 代表 整棵树下面一共有多少个 module （level == 2） 也是其标识ID，随着add 增长
@@ -59,7 +59,6 @@
           {
             id:999,
             labelName:"root",
-
             children:[]
           }
         ],
@@ -68,16 +67,15 @@
           children: 'children',
           isLeaf: 'leaf'
         },
-        thatNode:Object,
-        treeObj:{},
-        parentNode:{},
-        dialogFormVisible: true,
+        thatNode:Object, // 保存了 根节点
+        treeObj:{}, // 用于保存 树节点，在自定义函数中（非 elementUI 提供的函数）无法拿到 node 对象时
+        parentNode:{},  // 同上，拿到 某node 的上级 node
         form: {
           itemKey:undefined,
           name: '',
           interfaceType: '',
         },
-        availableKey:"",
+        availableKey:"", // 可用 itemKey
         formLabelWidth: '120px'
       }
     },
@@ -86,17 +84,18 @@
     },
     watch:{
       form:{
-        handler:function (val, oldVal){
+        handler:function (val){
           this.form = val
         },
         deep:true  //深度监视 form 中的属性变化，
       },
-      availableKey:function (val,oldVal) {
+      availableKey:function (val) {
         this.availableKey = val
       }
     },
     async mounted() {
       console.log("%c this is a Tree Component",LOGSTYLE.blackBackColor)
+
       await this.fillModuleConfig().then(()=>{
 
         for (let i = 0 ; i < this.getModuleConfig.length ; i++)
@@ -109,6 +108,7 @@
           };
 
           let data = this.thatNode.data
+
           if (!data.children) {
             this.$set(data, 'children', []);
           }
@@ -118,12 +118,14 @@
       }).catch(()=>{
         alert("error")
       })
+
       console.log("ModuleConfig 处理完毕，开始处理 InterfaceConfig")
+
       await this.fillInterfaceConfig().then(()=>{
         // 先找到所在的 module，然后再往 module 里面渲染
        for(let i = 0 ; i < this.getModuleConfig.length ;i++)
         {
-          console.log("out infinite")
+          //console.log("out infinite")
           /*
           *  i 代表 Module tree node 的下标 （index）
           *  在 module[i].interfaceConfig.HttpAction下面找
@@ -134,31 +136,32 @@
 
           // 一共四种接口，处理第一种：HttpAction
           for (let j = 0;j < this.getModuleConfig[i].interfaceConfig.HttpAction.length ; j++){
-            console.log("in infinite")
-            let interfaceType = "HttpAction"
-            let labelName = "HttpAction " + (j + 1)
+            //console.log("in infinite")
+            let interfaceType = "HttpAction";
+            let labelName = "HttpAction " + (j + 1);
 
             let newChild = {
               id:  this.getModuleConfig[i].interfaceConfig.HttpAction[j].itemKey,
               labelName,
               interfaceType
             };
-            childrenNodeLength += 1 //总共接口数 +1
+            childrenNodeLength += 1; //总共接口数 +1
 
             if (!this.thatNode.childNodes[i].data.children) {
               this.thatNode.childNodes[i].$set(this.thatNode.childNodes[i].data, 'children', []);
             }
             this.thatNode.childNodes[i].data.children.push(newChild); //增加子节点
 
-
-            childrenNodeKeyID++// 接口节点的 ID +1
+            childrenNodeKeyID++; // 接口节点的 ID +1
+            console.count("HttpAction 处理")
           }
-          console.log("InterfaceConfig.HttpAction 处理完毕")
+
           // 处理第二种: HttpQueryAction
 
           // 最终有效key 从 n开始
           this.availableKey = childrenNodeKeyID + nodeKeyId
         }
+        console.log("InterfaceConfig 处理完毕")
       }).catch(()=>{
             console.log("最终失败")
       })
@@ -188,7 +191,7 @@
         //当在root下建立 module，并且之前有在其它 module下建立过 interface
         // 这导致了 key id 的增长 所以要额外处理
         // 并且注重这几个 if 的排序
-        if (node.level === 2 && node.childNodes.length === 0 && childrenNodeKeyID > 0)
+        if (node.level === 2 )
         {
           let n = node.data.id
 
@@ -196,13 +199,13 @@
             <span>
             {this.getModuleConfig[n].name}
               <el-tooltip class="item" effect="dark" content="新增模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
-                <i class="el-icon-circle-plus plus" title="" on-click={() =>this.append(node)}/>
+                <i class="el-icon-circle-plus plus"  on-click={() =>this.append(node)}/>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="删除模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
-                <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeModuleNode(node, data)} />
+                <i class="iconfont ext-icon-delete-calendar delete" on-click={() => this.removeModuleNode(node, data)} />
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="保存/更新模块" placement="right">
-                <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentModule(node)}/>
+                <i class="iconfont ext-icon-update1 save-current-interface" on-click={()=>this.saveCurrentModule(node)}/>
               </el-tooltip>
             </span>
           )
@@ -210,47 +213,7 @@
         /*
         * 代表在当前的 module 下面还未有任何子节点
         * */
-        if (node.level === 2 && node.childNodes.length === 0 )
-        {
-          let n = node.data.id
-          return (
-            <span>
-              {this.getModuleConfig[n].name}
-              <el-tooltip class="item" effect="dark" content="新增模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
-                <i class="el-icon-circle-plus plus" title="" on-click={() =>this.append(node)}/>
-              </el-tooltip>
-              <el-tooltip class="item" effect="dark" content="删除模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
-                <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeModuleNode(node, data)} />
-              </el-tooltip>
-              <el-tooltip class="item" effect="dark" content="保存/更新模块" placement="right">
-                <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentModule(node)}/>
-              </el-tooltip>
-            </span>
 
-          )
-        }
-        /*
-        * 代表在当前的 module 下面有子节点一个或以上
-        * */
-        if (node.level === 2 && node.childNodes.length > 0)
-        {
-          let n = node.data.id
-          return (
-            <span>
-              {this.getModuleConfig[n].name}
-
-              <el-tooltip class="item" effect="dark" content="新增模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
-                <i class="el-icon-circle-plus plus" title="" on-click={() =>this.append(node)}/>
-              </el-tooltip>
-              <el-tooltip class="item" effect="dark" content="删除模块" placement="bottom" hide-after={800} open-delay={1000} enterable={false}>
-                <i class="iconfont ext-icon-delete-calendar delete" title="" on-click={() => this.removeModuleNode(node, data)} />
-              </el-tooltip>
-              <el-tooltip class="item" effect="dark" content="保存/更新模块" placement="right">
-                <i class="iconfont ext-icon-update1 save-current-interface" title="" on-click={()=>this.saveCurrentModule(node)}/>
-              </el-tooltip>
-            </span>
-          )
-        }
         if (node.level === 3 )
         {
           //console.log("在渲染接口,此时改模块下有1个接口,渲染的id为:" + n)
@@ -298,9 +261,19 @@
             data.children.push(newChild); //增加子节点
             node.expanded = true  //展开父级
             this.$router.push({name:'ModuleConfig',params:{index:(nodeKeyId)}}) // 添加成功后跳转路由
-            nodeKeyId += 1 //
+            nodeKeyId ++ // 模块数 + 1
+            // 最终有效key 从 n开始
+            this.availableKey = childrenNodeKeyID + nodeKeyId
+            this.$message({
+              type: 'success',
+              message: '添加HttpModule成功! itemKey为: ' + ( this.availableKey - 1)
+            });
             console.log("%c 添加HttpModule成功",LOGSTYLE.vueBackColor)
           }).catch((error)=>{
+            this.$message({
+              type: 'error',
+              message: '添加HttpModule失败! itemKey可能冲突: ' +  nodeKeyId
+            });
             console.log("%c 添加HttpModule失败,原因:" + error,LOGSTYLE.errorBackColor)
           })
 
@@ -325,15 +298,25 @@
         childrenNodeKeyID -= node.childNodes.length // 清除模块下的子节点
 
         //删除 对应的ModuleConfig item
+
         this.deleteModuleConfig(node.data.id).then((response)=>{
           console.log("%c 删除HttpModule成功",LOGSTYLE.vueBackColor)
           //nodeKeyId --; // 下标不能减一，否则产生bug
-
+          // 因为我用了 node.data.id 的固定增长标识了该模块在数组中的位置，
+          // node.data.id一旦赋值，将不会得到修改
+          this.$message({
+            type: 'success',
+            message: '删除成功!,删除的 itemKey为: ' + response.key
+          })
           //删除tree node
           const index = children.findIndex(d => d.id === data.id);
           children.splice(index, 1);
           this.$router.push('/') //关闭右侧路由页面
         }).catch((error)=>{
+          this.$message({
+            type: 'error',
+            message: '删除失败!'
+          })
           console.log("%c 删除失败,原因:" + error,LOGSTYLE.errorBackColor)
         })
 
