@@ -304,6 +304,7 @@
           //nodeKeyId --; // 下标不能减一，否则产生bug
           // 因为我用了 node.data.id 的固定增长标识了该模块在数组中的位置，
           // node.data.id一旦赋值，将不会得到修改
+
           this.$message({
             type: 'success',
             message: '删除成功!,删除的 itemKey为: ' + response.key
@@ -369,8 +370,8 @@
             let n = node.data.id
             this.$router.push({name:'ModuleConfig',params:{index:(n)}})
           }break;
-          case 3:{
-            this.$store.dispatch("saveCurrentInterfaceNode",node)
+          default:{
+            return;
           }break;
         }
       },//展示编辑框,改变路由
@@ -390,40 +391,35 @@
       },// 点击绿色的勾勾发起保存动作
       saveCurrentModule(node){
         event.stopPropagation();// 阻止冒泡给nodeClick
-
-        // 保存信息
-        axios({
-          method:'post',
-          url:'http://192.168.15.16:8482/educloud-report/report/updateHttpModule',
-          data:{
-            useCustomDialect:this.getModuleConfig[node.data.id].useCustomDialect,
-            batchSeperator:this.getModuleConfig[node.data.id].batchSeperator,
-            openQuote:this.getModuleConfig[node.data.id].openQuote,
-            identitySql:this.getModuleConfig[node.data.id].identitySql,
-            closeQuote:this.getModuleConfig[node.data.id].closeQuote,
-            pagingSqlTemplate:this.getModuleConfig[node.data.id].pagingSqlTemplate,
-            parameterPrefix:this.getModuleConfig[node.data.id].parameterPrefix,
-            supportsMultipleStatements:this.getModuleConfig[node.data.id].supportsMultipleStatements,
-            dbType:this.getModuleConfig[node.data.id].dbType,
-            dataSourceType:this.getModuleConfig[node.data.id].dataSourceType,
-            dbUser:this.getModuleConfig[node.data.id].dbUser,
-            dbPassword:this.getModuleConfig[node.data.id].dbPassword,
-            dbUrl:this.getModuleConfig[node.data.id].dbUrl,
-           // itemKey:node.data.id -1,
-            moduleKey:this.getModuleConfig[node.data.id].moduleKey,
-
-          }
-        }).then((data)=>{
-          console.log("保存更新成功")
-          console.log(data)
+        let index = node.data.id // 此处的index 既是模块所处的下标，也是保存要用的itemKey
+        this.updateModuleConfig({index}).then(()=>{
+          this.$message({
+            type: 'success',
+            message: '保存模块配置成功!'
+          })
         }).catch((error)=>{
-          console.log("保存更新失败")
-          console.log(error)
+          this.$message({
+            type: 'error',
+            message: '保存模块配置失败! 原因: ' + error
+          })
         })
       },
       saveCurrentInterface(node){
         event.stopPropagation();// 阻止冒泡给nodeClick
-
+        let index = node.parent.data.id
+        let itemKey = node.data.id
+        let interfaceType = node.data.interfaceType
+        this.updateInterfaceConfig({index,interfaceType,itemKey}).then(()=>{
+          this.$message({
+            type: 'success',
+            message: '保存接口配置成功!'
+          })
+        }).catch((error)=>{
+          this.$message({
+            type: 'error',
+            message: '保存接口配置失败! 原因: ' + error
+          })
+        })
       },
       closeDialog(){
 
@@ -462,17 +458,26 @@
         /*
         * index : 所处模块
         * name  : 所取的临时名称
-        * interfaceNodeKey  :  itemKey 作为唯一标识，且用于CUID
+        * interfaceNodeKey  :  itemKey 作为唯一标识，且用于 增删查改
         * */
         switch (interfaceType) {
           case "HttpAction":{
            // console.log(index,name,interfaceNodeKey)
-            let mark = await this.addHttpActionInterface({index,name,interfaceNodeKey}).then((response)=>{
-                console.log(response.msg)
+            let mark = await this.addHttpActionInterface({index,name,interfaceNodeKey}).then(()=>{
                 this.availableKey = childrenNodeKeyID + nodeKeyId
+                this.$message({
+                  showClose: true,
+                  message: '添加HttpAction接口成功',
+                  type: 'success'
+                })
                 return true
               }).catch((error)=>{
-                console.log(error)
+                this.$message({
+                  showClose: true,
+                  message: '添加HttpAction接口失败，原因: ' + error,
+                  type: 'error'
+                })
+                console.log("%c 添加HttpAction接口失败，原因: " + error)
                 return false
               })
             if(!mark){
@@ -480,19 +485,72 @@
             }
           }break;
           case "HttpQueryAction":{
-            let mark =  this.addHttpQueryActionInterface({index,name,interfaceNodeKey})
-            //暂时不做后台
-            this.availableKey = childrenNodeKeyID + nodeKeyId
+            let mark = await this.addHttpQueryActionInterface({index,name,interfaceNodeKey}).then(()=>{
+              this.availableKey = childrenNodeKeyID + nodeKeyId
+              this.$message({
+                showClose: true,
+                message: '添加HttpQueryAction接口成功',
+                type: 'success'
+              })
+              return true
+            }).catch((error)=>{
+              console.log(error)
+              this.$message({
+                showClose: true,
+                message: '添加HttpQueryAction接口失败，原因: ' + error,
+                type: 'error'
+              })
+              return false
+            })
+            if(!mark){
+              return ;
+            }
+
           }break;
           case "HttpActionReport":{
-            this.addHttpActionReportInterface({index,name,interfaceNodeKey})
-            //暂时不做后台
-            this.availableKey = childrenNodeKeyID + nodeKeyId
+            let mark = await this.addHttpActionReportInterface({index,name,interfaceNodeKey}).then(()=>{
+              this.availableKey = childrenNodeKeyID + nodeKeyId
+              this.$message({
+                showClose: true,
+                message: '添加HttpActionReport接口成功',
+                type: 'success'
+              })
+              return true
+            }).catch((error)=>{
+              this.$message({
+                showClose: true,
+                message: '添加HttpActionReport接口失败，原因: ' + error,
+                type: 'error'
+              })
+              console.log("%c 添加HttpActionReport接口失败，原因: " + error)
+              return false
+            })
+            if(!mark){
+              return ;
+            }
+
           }break;
           case "HttpQueryActionReport":{
-            this.addHttpQueryActionReportInterface({index,name,interfaceNodeKey})
-            //暂时不做后台
-            this.availableKey = childrenNodeKeyID + nodeKeyId
+            let mark = await this.addHttpQueryActionReportInterface({index,name,interfaceNodeKey}).then(()=>{
+              this.availableKey = childrenNodeKeyID + nodeKeyId
+              this.$message({
+                showClose: true,
+                message: '添加HttpQueryActionReport接口成功',
+                type: 'success'
+              })
+              return true
+            }).catch((error)=>{
+              this.$message({
+                showClose: true,
+                message: '添加HttpQueryActionReport接口失败，原因: ' + error,
+                type: 'error'
+              })
+              console.log("%c 添加HttpQueryActionReport接口失败，原因: " + error)
+              return false
+            })
+            if(!mark){
+              return ;
+            }
           }break;
           default:{
             alert("类型错误")
@@ -520,7 +578,8 @@
         this.form.interfaceType =""
         this.form.itemKey = ""
       },
-      ...mapActions(['fillModuleConfig',
+      ...mapActions([
+        'fillModuleConfig',
         'fillInterfaceConfig',
         'addModuleConfig',
         'deleteModuleConfig',
@@ -529,7 +588,9 @@
         'addHttpActionInterface',
         'addHttpQueryActionInterface',
         'addHttpActionReportInterface',
-        'addHttpQueryActionReportInterface'
+        'addHttpQueryActionReportInterface',
+        'updateModuleConfig',
+        'updateInterfaceConfig'
       ]),
 
     }

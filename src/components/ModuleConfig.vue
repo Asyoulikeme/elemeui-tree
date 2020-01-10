@@ -3,7 +3,7 @@
     <div v-show="eyeStatus" :class="{'module-config-container':true,'move-right':eyeStatus}">
       <el-form :model="getModuleConfig[index]">
         <el-form-item label="moduleKey" :label-width="formLabelWidth">
-          <el-input v-model="getModuleConfig[index].moduleKey" placeholder="主键" autocomplete="off"></el-input>
+          <el-input v-model="getModuleConfig[index].moduleKey" title="主键不允许修改" autocomplete="off" :disabled="true"/>
         </el-form-item>
         <el-form-item label="模块名称" :label-width="formLabelWidth">
           <el-input v-model="getModuleConfig[index].name" autocomplete="off"></el-input>

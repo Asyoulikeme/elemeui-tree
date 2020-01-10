@@ -1,6 +1,21 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import {getHttpModuleList,getHttpActionList,deleteHttpModule,deleteHttpAction,addHttpModule,addHttpAction} from '../api/index'
+import {
+  getHttpModuleList,
+  getHttpActionList,
+  deleteHttpModule,
+  deleteHttpAction,
+  addHttpModule,
+  addHttpAction,
+  addHttpQueryAction,
+  addHttpActionReport,
+  addHttpQueryActionReport,
+  updateHttpModule,
+  updateHttpAction,
+  updateHttpQueryAction,
+  updateHttpActionReport,
+  updateHttpQueryActionReport
+} from '../api/index'
 import {objectArrayFoundKeyIndex} from '../assets/js/commons';
 
 import {LOGSTYLE} from '../assets/js/commons';
@@ -54,19 +69,21 @@ export default new Vuex.Store({
       state.moduleConfig[index] = {}
     },
     //删除接口时前端数据结构的变化
-    deleteInterfaceConfigItem(state,{parent_index,self_id,interfaceType}){
+    deleteInterfaceConfigItem(state,{parent_index,itemKey,interfaceType}){
       /*
       * parent_index 所处模块下标
       * self_index 第N 条
       * interfaceType 类型
+      * itemKey  itemKey
       * */
       /*
       * 找到当前 id 在数组的哪个位置
       * 为此需要在 addInterfaceConfig，fillInterfaceConfig 的时候，给interface多增加一个属性为 :interfaceNodeKey
       * */
-      console.log(parent_index,interfaceType,self_id)
+      //console.log(parent_index,interfaceType,self_id)
       try {
-        let index = objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig[interfaceType],'interfaceNodeKey',self_id)
+        let index = objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig[interfaceType],'itemKey',itemKey)
+
         state.moduleConfig[parent_index].interfaceConfig[interfaceType].splice(index,1)
       }
       catch (e) {
@@ -126,7 +143,7 @@ export default new Vuex.Store({
       for (let item of list)
       {
         // 要将对象处理一下再填充
-        item.sqlParams[0].value =  JSON.stringify(item.sqlParams[0].value)
+        //item.sqlParams[0].value =  JSON.stringify(item.sqlParams[0].value)
         belongWithModule = item.module  //属于moduleKey 为几的模块？
         let index = objectArrayFoundKeyIndex(state.moduleConfig,"moduleKey",parseInt(belongWithModule))
         try{
@@ -158,6 +175,7 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    /* 模块的 增删查改*/
     //添加模块的异步
     addModuleConfig({commit},index){
       console.log("添加的Module itemKey为:" + index)
@@ -206,10 +224,6 @@ export default new Vuex.Store({
         })
       })
     },
-    // 保存接口的异步
-    saveCurrentInterfaceNode({commit},currNode){
-      commit('setInterfaceNode',currNode)
-    },
     // 删除模块的异步
     deleteModuleConfig({state,commit},index){
       let key = state.moduleConfig[index].moduleKey
@@ -225,7 +239,7 @@ export default new Vuex.Store({
             resolve(response)
           }
           else
-          reject(response.msg)
+            reject(response.msg)
 
         }).catch((error)=>{
           console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
@@ -233,9 +247,122 @@ export default new Vuex.Store({
       })
 
     },
+    // 读取模块信息并初始化
+    fillModuleConfig({commit}){
+      return new Promise((resolve, reject)=>{
+
+        let promise = getHttpModuleList()
+
+        promise.then(res =>{
+          commit('initSetModuleConfig',res.list)
+          resolve()
+        }).catch(error =>{
+          alert("error 666")
+          reject()
+        })
+      })
+
+
+    },
+    // 更新模块的异步
+    updateModuleConfig({state,commit},{index}){
+      let item = state.moduleConfig[index] // 此处的index 既是模块所处的下标，也是保存要用的itemKey
+      return new Promise((resolve,reject)=>{
+        updateHttpModule(item).then((response)=>{
+          if (response.code === 1)
+          {
+            resolve()
+          }
+          else
+          {
+            reject(response.msg)
+          }
+        }).catch((e)=>{
+          console.log("%c 执行过程中失败，原因: "+ e)
+        })
+      })
+    },
+
+    /* 接口的 增删查改*/
+    // 更新接口的异步
+    updateInterfaceConfig({state,commit},{index,interfaceType,itemKey}){
+      /*
+      * index 所处模块下标
+      * interfaceType  接口类型，选择发送何种请求访问接口
+      * itemKey 要保存的接口类型的 itemKey
+      * hasInterface 在 state.moduleConfig[index].interfaceConfig[interfaceType] 数组中存在的位置
+      * */
+      let hasInterface = objectArrayFoundKeyIndex(state.moduleConfig[index].interfaceConfig[interfaceType],"itemKey",itemKey)
+      console.log("%c 所处模块下标：" + "%c" +index +
+        "%c 接口类型为：" + "%c" + interfaceType +
+        "%c 主键为：" + "%c" + itemKey +
+        "%c 在数组中的位置：" + "%c" + hasInterface,
+        LOGSTYLE.vueBackColor,LOGSTYLE.lightRed,
+        LOGSTYLE.vueBackColor,LOGSTYLE.lightRed,
+        LOGSTYLE.vueBackColor,LOGSTYLE.lightRed,
+        LOGSTYLE.vueBackColor,LOGSTYLE.lightRed
+        )
+
+      let item = state.moduleConfig[index].interfaceConfig[interfaceType][hasInterface]
+
+      return new Promise((resolve,reject)=>{
+        if (interfaceType === 'HttpAction')
+        updateHttpAction(item).then((response)=>{
+          if (response.code === 1)
+          {
+            resolve()
+          }
+          else
+          {
+            reject(response.msg)
+          }
+        }).catch((e)=>{
+          console.log("%c 执行过程中失败，原因: "+ e)
+        })
+        if (interfaceType === 'HttpQueryAction')
+          updateHttpQueryAction(item).then((response)=>{
+            if (response.code === 1)
+            {
+              resolve()
+            }
+            else
+            {
+              reject(response.msg)
+            }
+          }).catch((e)=>{
+            console.log("%c 执行过程中失败，原因: "+ e)
+          })
+        if (interfaceType === 'HttpActionReport')
+          updateHttpActionReport(item).then((response)=>{
+            if (response.code === 1)
+            {
+              resolve()
+            }
+            else
+            {
+              reject(response.msg)
+            }
+          }).catch((e)=>{
+            console.log("%c 执行过程中失败，原因: "+ e)
+          })
+        if (interfaceType === 'HttpQueryActionReport')
+          updateHttpQueryActionReport(item).then((response)=>{
+            if (response.code === 1)
+            {
+              resolve()
+            }
+            else
+            {
+              reject(response.msg)
+            }
+          }).catch((e)=>{
+            console.log("%c 执行过程中失败，原因: "+ e)
+          })
+      })
+    },
     // 删除接口的异步
     deleteInterfaceConfig({state,commit},{parent_index,self_id,interfaceType,currentChildNodeindex}){
-      console.log(parent_index,self_id,interfaceType,currentChildNodeindex)
+      //console.log(parent_index,self_id,interfaceType,currentChildNodeindex)
       /*
       * parent_index  当前接口位于哪个模块（moduleConfig 的下标）
       * self_id       当前节点的 node.data.id
@@ -259,7 +386,7 @@ export default new Vuex.Store({
           if (response.code === 1)
           {
             console.log("删除"+interfaceType +"成功")
-            commit('deleteInterfaceConfigItem',{parent_index,self_id,interfaceType})
+            commit('deleteInterfaceConfigItem',{parent_index,itemKey,interfaceType})
             resolve(response)
           }
           else {
@@ -270,23 +397,6 @@ export default new Vuex.Store({
         })
 
       })
-
-    },
-    // 读取模块信息并初始化
-    fillModuleConfig({commit}){
-      return new Promise((resolve, reject)=>{
-
-        let promise = getHttpModuleList()
-
-        promise.then(res =>{
-          commit('initSetModuleConfig',res.list)
-          resolve()
-        }).catch(error =>{
-          alert("error 666")
-          reject()
-        })
-      })
-
 
     },
     // 读取接口信息并初始化
@@ -300,34 +410,33 @@ export default new Vuex.Store({
             resolve();
           }
           else
+          {
+            console.log("xhb nb")
             reject(response)
+          }
+
         }).catch((error)=>{
           console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
         })
       })
 
     },
-    // 确认对话框的状态改变
-    switchCreateInterfaceConfirm({commit},{status}){
-      commit('setCreateInterfaceConfirmStatus',status)
-
-    },
     // 添加HttpAction时的异步
     addHttpActionInterface({commit},{index,name,interfaceNodeKey}){
-        console.log("添加的接口的 itemKey为:" + interfaceNodeKey)
+       /* console.log("添加的接口的 itemKey为:" + interfaceNodeKey)
         let currentDate = new Date()
-        console.log(index,name,interfaceNodeKey)
+        console.log(index,name,interfaceNodeKey)*/
         let item = {
-          actionId:'',  // hidden
+          actionId:'',
           actionName:'New HttpAction',
           actionType:'None',
-          appId:'', // hidden
+          appId:'',
           insertTime: "",
           insertUserId:'',
-          itemKey:interfaceNodeKey + "", // hidden
-          method:'',  // hidden
-          module:index, // hidden
-          release:"false",
+          itemKey:interfaceNodeKey + "",
+          method:'',
+          module:index,
+          release:"false", //boolean
           returnType:'',
           sql:'',
           sqlColumns:[
@@ -366,15 +475,13 @@ export default new Vuex.Store({
             if (response.code === 1){
               console.log("%c 添加 HttpAction 成功",LOGSTYLE.vueBackColor)
               commit('setHttpActionInterface',{index,item})
-              resolve(response)
+              resolve()
             }
             else {
-              console.log(response)
               reject(response.msg)
             }
           }).catch((error)=>{
-            console.log("错误")
-            reject("执行出错")
+            reject("执行过程中出错" + error)
           })
 
       })
@@ -383,8 +490,8 @@ export default new Vuex.Store({
     // 添加HttpQueryAction时的异步
     addHttpQueryActionInterface({commit},{index,name,interfaceNodeKey}){
       let item = {
-        appId:'', // hidden
-        actionId:'',  // hidden
+        appId:'',
+        actionId:'',
         actionName:name,
         sqlSelect:'',
         sqlColumns:[
@@ -411,62 +518,87 @@ export default new Vuex.Store({
           {
             sortId:'',
             coumnName:'',
-            isAscending:Boolean
+            isAscending:"", //Boolean
           }
         ],
-        itemKey:interfaceNodeKey + "", // hidden
-        method:'',  // hidden
-        module:index  // hidden
+        itemKey:interfaceNodeKey + "",
+        method:'',
+        module:index
 
       }
-      commit('setHttpQueryActionInterface',{index,item})
+      return new Promise((resolve, reject) => {
+        addHttpQueryAction(item).then((response)=>{
+          if (response.code === 1){
+            console.log("%c 添加 HttpQueryAction 成功",LOGSTYLE.vueBackColor)
+            commit('setHttpQueryActionInterface',{index,item})
+            resolve()
+          }
+          else {
+            reject(response.msg)
+          }
+        }).catch((error)=>{
+          reject("执行过程中出错" + error)
+        })
+
+      })
+
     },
     // 添加HttpActionReport时的异步
     addHttpActionReportInterface({commit},{index,name,interfaceNodeKey}){
       let item =  {
-        appId:'', // hidden
-        actionId:'',  // hidden
+        appId:'',
+        actionId:'',
         actionName:name,
-        sqlSelect:'',
+        actionType:"",
+        insertTime:"",
+        insertUserId: "",
+        updateTime: "",
+        updateUserId: "",
+        sql:'',
         sqlColumns:[
           {
             name:'',
             type:''
           }
         ],
-        conditions:[
+        sqlParams: [
           {
-            appId:'',
-            condictionId:'',
-            conditionType:'',
-            groupOperator:'',
-            isGroup:'',   //Boolean
-            release:'',   //Boolean
-            inserTime:"",   //Date
-            insertUserId:'',
-            updateTime:"",  //Date
-            updateUserId:''
+            name:"",
+            type:"",
+            value:""  //Object
           }
         ],
-        sorts:[
-          {
-            sortId:'',
-            coumnName:'',
-            isAscending:Boolean
-          }
-        ],
-        itemKey:interfaceNodeKey + "", // hidden
-        method:'',  // hidden
-        module:index  // hidden
-
+        itemKey:interfaceNodeKey + "",
+        method:'',
+        module:index,
+        release:"", //Boolean
+        returnType:"",
+        viewName:"",
+        viewType:""
       }
-      commit('setHttpActionReportInterface',{index,item})
-    },
+      return new Promise((resolve, reject) => {
+        addHttpActionReport(item).then((response)=>{
+          if (response.code === 1){
+            console.log("%c 添加 HttpActionReport 成功",LOGSTYLE.vueBackColor)
+            commit('setHttpActionReportInterface',{index,item})
+            resolve()
+          }
+          else {
+            reject(response.msg)
+          }
+        }).catch((error)=>{
+          reject("执行过程中出错" + error)
+        })
+
+      })
+
+    },  // 接口有问题，明天查
     // 添加HttpQueryActionReport时的异步
     addHttpQueryActionReportInterface({commit},{index,name,interfaceNodeKey}){
+      console.log(index,name,interfaceNodeKey)
       let item =  {
-        appId:'', // hidden
-        actionId:'',  // hidden
+        appId:'',
+        actionId:'',
         actionName:name,
         sqlSelect:'',
         sqlColumns:[
@@ -493,15 +625,37 @@ export default new Vuex.Store({
           {
             sortId:'',
             coumnName:'',
-            isAscending:Boolean
+            isAscending:"" //Boolean
           }
         ],
-        itemKey:interfaceNodeKey + "", // hidden
-        method:'',  // hidden
-        module:index  // hidden
-
+        itemKey:interfaceNodeKey + "",
+        method:'',
+        module:index,
+        viewName:"",
+        viewType:""
       }
-      commit('setHttpQueryActionReportInterface',{index,item})
+      return new Promise((resolve, reject) => {
+        addHttpQueryActionReport(item).then((response)=>{
+          if (response.code === 1){
+            console.log("%c 添加 HttpQueryActionReport 成功",LOGSTYLE.vueBackColor)
+            commit('setHttpQueryActionReportInterface',{index,item})
+            resolve()
+          }
+          else {
+            reject(response.msg)
+          }
+        }).catch((error)=>{
+          reject("执行过程中出错" + error)
+        })
+
+      })
+
+    },// 接口有问题，明天查
+
+    // 确认对话框的状态改变
+    switchCreateInterfaceConfirm({commit},{status}){
+      commit('setCreateInterfaceConfirmStatus',status)
+
     }
   }
 });

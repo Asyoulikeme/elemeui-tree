@@ -6,13 +6,13 @@
         <i class="header-icon el-icon-info"> HttpAction -- {{HttpAction.itemKey}}</i>
       </div>
       <el-form :model="HttpAction">
-        <el-form-item label="接口名称" :label-width="formLabelWidth">
+        <el-form-item label="actionName" :label-width="formLabelWidth">
           <el-input v-model="HttpAction.actionName" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="接口ID" :label-width="formLabelWidth">
+        <el-form-item label="actionId" :label-width="formLabelWidth">
           <el-input v-model="HttpAction.actionId" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="接口类型" :label-width="formLabelWidth">
+        <el-form-item label="actionType" :label-width="formLabelWidth">
           <el-input v-model="HttpAction.actionType" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="AppID" :label-width="formLabelWidth">
@@ -40,11 +40,21 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="returnType" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.returnType" autocomplete="off"></el-input>
+          <el-select v-model="HttpAction.returnType" placeholder="请选择可用类型"  popper-class="input-selec">
+            <el-option class="select-option" label="String" value="String" />
+            <el-option class="select-option" label="Int" value="Int" />
+            <el-option class="select-option" label="BigInt" value="BigInt" />
+            <el-option class="select-option" label="DateTime" value="DateTime" />
+            <el-option class="select-option" label="Boolean" value="Boolean" />
+            <el-option class="select-option" label="Double" value="Double" />
+            <el-option class="select-option" label="Money" value="Money" />
+            <el-option class="select-option" label="Text" value="Text" />
+          </el-select>
         </el-form-item>
         <el-form-item label="sql" :label-width="formLabelWidth">
           <el-input v-model="HttpAction.sql" autocomplete="off"></el-input>
         </el-form-item>
+        <!--sqlColumns-->
         <fieldset>
           <legend>sqlColumns[ ]</legend>
           <i class="el-icon-circle-plus" @click.stop="addSqlColumns(HttpActionIndex)"> 添加</i>
@@ -63,6 +73,7 @@
             </el-collapse-item>
           </el-collapse>
         </fieldset>
+        <!--sqlParams-->
         <fieldset>
           <legend>sqlParams[ ]</legend>
           <i class="el-icon-circle-plus" @click.stop="addSqlParams(HttpActionIndex)"> 添加</i>
