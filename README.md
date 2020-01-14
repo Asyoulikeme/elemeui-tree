@@ -6,6 +6,18 @@
 |ElementUI| v2.13.0|
 |https://www.iconfont.cn/ | 阿里矢量图标|
 
+## 启动开发环境
+
+````shell
+npm run serve
+````
+
+## 打包生成环境
+
+````shell
+npm run build
+````
+
 
 
 
@@ -119,8 +131,9 @@ moduleConfig = [
 如果要做到最后 id 不爆炸，个人觉得，应该将module 也独立成一张表，interface 的四大模块也是另外一张表，这样才能有效的避免 主键冲突，现阶段问题如下：
 
 1. 在频繁的 建立 module 后，在module 下建立 interface，然后再建立module ，下一个id必须 是两者数量的合，这种情况不利于扩展，且删除中间节点的 module后容易发生主键冲突，现阶段解决方法如下：
-   - 无奈之下，下一次添加时赋值的 id 用 module与 interface 的数量总和来维护
-
+   
+- 无奈之下，下一次添加时赋值的 id 用 module与 interface 的数量总和来维护
+   
 2. 在删除module后，会使得module 下面的interface依然存在，导致下一次刷新页面后，interface的初始化无法找到属于它的模块，将会抛出错误。现阶段解决方法如下：
 
    - 删除module 之前，需要先将其下面的 interface 手动点击删除
@@ -195,11 +208,15 @@ for(let item of list)
 >（因为vue检测到了依赖的添加，则会动态的通知依赖点更新） 
 
 
+## 关于Tree组件中的 confirm
+本来组件化开发应该把一切能分开的组件尽量的分开的，但是为了能更方便的拿到
+elementUI 的 Tree组件实例，所以就集中放在Tree里面了，归根结底是因为我不知道有没有
+更好的办法来获取到Tree组件实例（在其它组件中），后面继续学习
 
 
 
+## 最终结果图预览
+
+[![lbNsDs.md.png](https://s2.ax1x.com/2020/01/14/lbNsDs.md.png)](https://imgchr.com/i/lbNsDs)
 ## 之后要解决的问题
-> 解决上一版本中的接口删除问题，
-> 后台接口有bug，有关键词 Report的都不能进行添加操作，明天催办
-> 接下来要完成 剩下三类接口的 保存与删除
-
+> none

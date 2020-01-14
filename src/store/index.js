@@ -1,21 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import {
-  getHttpModuleList,
-  getHttpActionList,
-  deleteHttpModule,
-  deleteHttpAction,
-  addHttpModule,
-  addHttpAction,
-  addHttpQueryAction,
-  addHttpActionReport,
-  addHttpQueryActionReport,
-  updateHttpModule,
-  updateHttpAction,
-  updateHttpQueryAction,
-  updateHttpActionReport,
-  updateHttpQueryActionReport
-} from '../api/index'
+import api from '../api/index'
 import {objectArrayFoundKeyIndex} from '../assets/js/commons';
 
 import {LOGSTYLE} from '../assets/js/commons';
@@ -138,21 +123,19 @@ export default new Vuex.Store({
       }
     },
     //首次渲染接口时前端数据结构的变化
-    initSetHttpActionConfig(state,list){
+    initSetInterfaceConfig(state,{list,key}){
       let belongWithModule = 0;
       for (let item of list)
       {
-        // 要将对象处理一下再填充
-        //item.sqlParams[0].value =  JSON.stringify(item.sqlParams[0].value)
         belongWithModule = item.module  //属于moduleKey 为几的模块？
         let index = objectArrayFoundKeyIndex(state.moduleConfig,"moduleKey",parseInt(belongWithModule))
         try{
-          state.moduleConfig[index].interfaceConfig.HttpAction.push(item)
+          state.moduleConfig[index].interfaceConfig[key].push(item)
         }
         catch (e) {
           console.log(e)
           //为防止异常情况发生，请查看输出中的list，参照list 中的 module 值来确认该HttpAction属于哪一个模块
-          console.warn("%c 有一个接口渲染失败,原因:" + "数据库中没有属于该接口的模块",LOGSTYLE.errorBackColor)
+          console.warn("%c 有一个"+ key + "接口渲染失败,原因:" + "数据库中没有属于该接口的模块",LOGSTYLE.errorBackColor)
         }
       }
     },
@@ -211,7 +194,7 @@ export default new Vuex.Store({
         }
       }
       return new Promise((resolve, reject)=>{
-        addHttpModule(item).then((response)=>{
+        api.addHttpModule(item).then((response)=>{
           if (response.code === 1){
             commit('pushEmptyModuleConfig',item)
             resolve()
@@ -230,7 +213,7 @@ export default new Vuex.Store({
       console.log("要删除的是 moduleKey：" + key)
       return new Promise((resolve,reject)=>{
         commit('deleteModuleConfigItem',index)
-        deleteHttpModule({
+        api.deleteHttpModule({
           itemKey:key
         }).then((response)=>{
           if (response.code === 1)
@@ -251,7 +234,7 @@ export default new Vuex.Store({
     fillModuleConfig({commit}){
       return new Promise((resolve, reject)=>{
 
-        let promise = getHttpModuleList()
+        let promise = api.getHttpModuleList()
 
         promise.then(res =>{
           commit('initSetModuleConfig',res.list)
@@ -268,7 +251,7 @@ export default new Vuex.Store({
     updateModuleConfig({state,commit},{index}){
       let item = state.moduleConfig[index] // 此处的index 既是模块所处的下标，也是保存要用的itemKey
       return new Promise((resolve,reject)=>{
-        updateHttpModule(item).then((response)=>{
+        api.updateHttpModule(item).then((response)=>{
           if (response.code === 1)
           {
             resolve()
@@ -307,7 +290,7 @@ export default new Vuex.Store({
 
       return new Promise((resolve,reject)=>{
         if (interfaceType === 'HttpAction')
-        updateHttpAction(item).then((response)=>{
+        api.updateHttpAction(item).then((response)=>{
           if (response.code === 1)
           {
             resolve()
@@ -320,7 +303,7 @@ export default new Vuex.Store({
           console.log("%c 执行过程中失败，原因: "+ e)
         })
         if (interfaceType === 'HttpQueryAction')
-          updateHttpQueryAction(item).then((response)=>{
+          api.updateHttpQueryAction(item).then((response)=>{
             if (response.code === 1)
             {
               resolve()
@@ -333,7 +316,7 @@ export default new Vuex.Store({
             console.log("%c 执行过程中失败，原因: "+ e)
           })
         if (interfaceType === 'HttpActionReport')
-          updateHttpActionReport(item).then((response)=>{
+          api.updateHttpActionReport(item).then((response)=>{
             if (response.code === 1)
             {
               resolve()
@@ -346,7 +329,7 @@ export default new Vuex.Store({
             console.log("%c 执行过程中失败，原因: "+ e)
           })
         if (interfaceType === 'HttpQueryActionReport')
-          updateHttpQueryActionReport(item).then((response)=>{
+          api.updateHttpQueryActionReport(item).then((response)=>{
             if (response.code === 1)
             {
               resolve()
@@ -365,20 +348,21 @@ export default new Vuex.Store({
       //console.log(parent_index,self_id,interfaceType,currentChildNodeindex)
       /*
       * parent_index  当前接口位于哪个模块（moduleConfig 的下标）
-      * self_id       当前节点的 node.data.id
+      * self_id       当前节点的 node.data.id,也就是 itemKey
       * interfaceType 确保删除某个类型的节点
-      * currentChildNodeindex   当前节点在模块的第 n 个下标位置，也就代表了要用itemKey 来删除
+      * currentChildNodeindex   当前节点在模块的第 n 个下标位置
       * */
       /*
       * 当前函数仅仅是删除 HttpAction ,等后台做完了再在这个函数里面写其它的几个接口
       * */
-
-      let itemKey = state.moduleConfig[parent_index].interfaceConfig[interfaceType][currentChildNodeindex].itemKey
-      console.log("%c 即将删除的是当前下标为:" + "%c " + parent_index + "%c 的模块下面的第:" + "%c " + currentChildNodeindex + "%c 个节点,它的itemKey为:"+"%c " + itemKey ,
+      let index = objectArrayFoundKeyIndex(state.moduleConfig[parent_index].interfaceConfig[interfaceType],"itemKey",self_id)
+      let itemKey = state.moduleConfig[parent_index].interfaceConfig[interfaceType][index].itemKey
+      console.log("%c 即将删除的是当前下标为:" + "%c " + parent_index + "%c 的模块下面的接口，它在模块中的下标为:" + "%c " + currentChildNodeindex + "%c ,它的itemKey为:"+"%c " + itemKey ,
         LOGSTYLE.vueBackColor,LOGSTYLE.blackBackColor,LOGSTYLE.vueBackColor,LOGSTYLE.blackBackColor,LOGSTYLE.vueBackColor,LOGSTYLE.lightRed)
+      console.log("%c 删除的接口类型是: " + interfaceType,LOGSTYLE.lightRed)
 
       return new Promise((resolve,reject)=>{
-        deleteHttpAction(
+        api["delete" + interfaceType](
           {
             itemKey
           }
@@ -387,7 +371,7 @@ export default new Vuex.Store({
           {
             console.log("删除"+interfaceType +"成功")
             commit('deleteInterfaceConfigItem',{parent_index,itemKey,interfaceType})
-            resolve(response)
+            resolve()
           }
           else {
             console.log(response.msg)
@@ -400,26 +384,83 @@ export default new Vuex.Store({
 
     },
     // 读取接口信息并初始化
-    fillInterfaceConfig({commit}){
-      return new Promise((resolve, reject)=>{
-        getHttpActionList().then((response)=>{
+    async fillInterfaceConfig({commit}){
+      await api.getHttpActionList().then((response)=>{
           if (response.code === 1)
           {
+            let list = response.list
+            let key = "HttpAction"
+            console.log("HttpActionList:")
             console.log(response.list)
-            commit('initSetHttpActionConfig',response.list)
-            resolve();
+            commit('initSetInterfaceConfig',{list,key})
+           // resolve();
           }
           else
           {
-            console.log("xhb nb")
-            reject(response)
+            console.log("读取HttpActionList失败")
+           // reject(response)
           }
 
         }).catch((error)=>{
           console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
         })
-      })
+      await api.getHttpQueryActionList().then((response)=>{
+        if (response.code === 1)
+        {
+          let list = response.list
+          let key = "HttpQueryAction"
+          console.log("HttpQueryActionList:")
+          console.log(response.list)
+          commit('initSetInterfaceConfig',{list,key})
+         // resolve();
+        }
+        else
+        {
+          console.log("读取HttpQueryActionList失败")
+         // reject(response)
+        }
 
+      }).catch((error)=>{
+        console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
+      })
+      await api.getHttpActionReportList().then((response)=>{
+        if (response.code === 1)
+        {
+          let list = response.list
+          let key = "HttpActionReport"
+          console.log("HttpActionReportList:")
+          console.log(response.list)
+          commit('initSetInterfaceConfig',{list,key})
+          // resolve();
+        }
+        else
+        {
+          console.log("读取HttpActionReportList失败")
+          // reject(response)
+        }
+
+      }).catch((error)=>{
+        console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
+      })
+      await api.getHttpQueryActionReportList().then((response)=>{
+        if (response.code === 1)
+        {
+          let list = response.list
+          let key = "HttpQueryActionReport"
+          console.log("HttpQueryActionReportList:")
+          console.log(response.list)
+          commit('initSetInterfaceConfig',{list,key})
+          // resolve();
+        }
+        else
+        {
+          console.log("读取HttpQueryActionReportList失败")
+          // reject(response)
+        }
+
+      }).catch((error)=>{
+        console.error("%c 执行过程中出错:" + error,LOGSTYLE.errorBackColor)
+      })
     },
     // 添加HttpAction时的异步
     addHttpActionInterface({commit},{index,name,interfaceNodeKey}){
@@ -471,7 +512,7 @@ export default new Vuex.Store({
         }
         //console.log(item)
       return new Promise((resolve, reject) => {
-        addHttpAction(item).then((response)=>{
+        api.addHttpAction(item).then((response)=>{
             if (response.code === 1){
               console.log("%c 添加 HttpAction 成功",LOGSTYLE.vueBackColor)
               commit('setHttpActionInterface',{index,item})
@@ -527,7 +568,7 @@ export default new Vuex.Store({
 
       }
       return new Promise((resolve, reject) => {
-        addHttpQueryAction(item).then((response)=>{
+        api.addHttpQueryAction(item).then((response)=>{
           if (response.code === 1){
             console.log("%c 添加 HttpQueryAction 成功",LOGSTYLE.vueBackColor)
             commit('setHttpQueryActionInterface',{index,item})
@@ -569,7 +610,7 @@ export default new Vuex.Store({
           }
         ],
         itemKey:interfaceNodeKey + "",
-        method:'',
+        method:'get',
         module:index,
         release:"", //Boolean
         returnType:"",
@@ -577,7 +618,7 @@ export default new Vuex.Store({
         viewType:""
       }
       return new Promise((resolve, reject) => {
-        addHttpActionReport(item).then((response)=>{
+        api.addHttpActionReport(item).then((response)=>{
           if (response.code === 1){
             console.log("%c 添加 HttpActionReport 成功",LOGSTYLE.vueBackColor)
             commit('setHttpActionReportInterface',{index,item})
@@ -628,14 +669,14 @@ export default new Vuex.Store({
             isAscending:"" //Boolean
           }
         ],
-        itemKey:interfaceNodeKey + "",
-        method:'',
+        itemKey:interfaceNodeKey,
+        method:'get',
         module:index,
         viewName:"",
         viewType:""
       }
       return new Promise((resolve, reject) => {
-        addHttpQueryActionReport(item).then((response)=>{
+        api.addHttpQueryActionReport(item).then((response)=>{
           if (response.code === 1){
             console.log("%c 添加 HttpQueryActionReport 成功",LOGSTYLE.vueBackColor)
             commit('setHttpQueryActionReportInterface',{index,item})

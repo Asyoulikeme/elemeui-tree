@@ -5,9 +5,7 @@
         <i class="header-icon el-icon-info"> HttpQueryAction -- {{HttpQueryAction.itemKey}}</i>
       </div>
       <el-form :model="HttpQueryAction">
-        <el-form-item label="AppId" :label-width="formLabelWidth">
-          <el-input v-model="HttpQueryAction.appId" autocomplete="off"></el-input>
-        </el-form-item>
+
         <el-form-item label="接口名称" :label-width="formLabelWidth">
           <el-input v-model="HttpQueryAction.actionName" autocomplete="off"></el-input>
         </el-form-item>

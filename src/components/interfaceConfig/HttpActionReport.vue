@@ -5,7 +5,7 @@
         <i class="header-icon el-icon-info"> HttpActionReport -- {{HttpActionReport.itemKey}}</i>
       </div>
       <el-form :model="HttpActionReport">
-
+`
         <el-form-item label="AppId" :label-width="formLabelWidth">
           <el-input v-model="HttpActionReport.appId" autocomplete="off" />
         </el-form-item>

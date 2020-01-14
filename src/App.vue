@@ -1,7 +1,6 @@
 <template>
   <div id="app">
     <header>
-      <h2>HttpActions</h2>
     </header>
     <div id="main-body">
       <div id="left-box">
@@ -19,16 +18,11 @@
 
 
   import Tree from './components/Tree';
-  import {LOGSTYLE} from './assets/js/commons';
 
   export default {
-
   components: {
-    Tree,
-  },
-    mounted() {
-
-    }
+    Tree
+  }
   }
 </script>
 <style lang="scss">

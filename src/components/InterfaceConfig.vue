@@ -5,17 +5,18 @@
       <i class="iconfont ext-icon-view-off eye" title="显示模块信息" v-else @click="setEyeStatus(true)" />
 
     <HttpAction />
-    <HttpQueryAction />
     <HttpActionReport />
+    <HttpQueryAction />
     <HttpQueryActionReport />
   </div>
 </template>
 
 <script>
   import {mapState} from 'vuex'
-  import HttpQueryAction from './interfaceConfig/HttpQueryAction';
+
   import HttpAction from './interfaceConfig/HttpAction';
   import HttpActionReport from './interfaceConfig/HttpActionReport'
+  import HttpQueryAction from './interfaceConfig/HttpQueryAction';
   import HttpQueryActionReport from './interfaceConfig/HttpQueryActionReport';
   export default {
     name: 'InterfaceConfig',

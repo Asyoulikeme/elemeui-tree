@@ -47,7 +47,6 @@
 
   import {mapGetters,mapActions} from 'vuex'
   import {LOGSTYLE} from '../assets/js/commons';
-  import axios from 'axios'
   let nodeKeyId = 0; // 代表 整棵树下面一共有多少个 module （level == 2） 也是其标识ID，随着add 增长
   let childrenNodeKeyID = 0; // 整颗树下面一共有多少个 interface（level == 3）
   let childrenNodeLength = 0; //是其标识ID，随着add 增长
@@ -122,53 +121,20 @@
       console.log("ModuleConfig 处理完毕，开始处理 InterfaceConfig")
 
       await this.fillInterfaceConfig().then(()=>{
-        // 先找到所在的 module，然后再往 module 里面渲染
-       for(let i = 0 ; i < this.getModuleConfig.length ;i++)
-        {
-          //console.log("out infinite")
-          /*
-          *  i 代表 Module tree node 的下标 （index）
-          *  在 module[i].interfaceConfig.HttpAction下面找
-          *  如果 module[i].interfaceConfig.HttpAction.length >0 则说明有接口节点 要渲染到当前的 模块节点下面
-          *  module node（模块节点） 通过拿到 root 节点，然后 root.childNodes[i]
-          *  实际为已经存储好的： this.thatNode.childNodes[i], （直接用）
-          * */
+        console.log("开始渲染接口")
+        //HttpAction
+        this.fillInterfaceConfigToModule("HttpAction")
+        //HttpQueryAction
+        this.fillInterfaceConfigToModule("HttpQueryAction")
+        //HttpActionReport
+        this.fillInterfaceConfigToModule("HttpActionReport")
+        //HttpQueryActionReport
+        this.fillInterfaceConfigToModule("HttpQueryActionReport")
 
-          // 一共四种接口，处理第一种：HttpAction
-          for (let j = 0;j < this.getModuleConfig[i].interfaceConfig.HttpAction.length ; j++){
-            //console.log("in infinite")
-            let interfaceType = "HttpAction";
-            let labelName = "HttpAction " + (j + 1);
-
-            let newChild = {
-              id:  this.getModuleConfig[i].interfaceConfig.HttpAction[j].itemKey,
-              labelName,
-              interfaceType
-            };
-            childrenNodeLength += 1; //总共接口数 +1
-
-            if (!this.thatNode.childNodes[i].data.children) {
-              this.thatNode.childNodes[i].$set(this.thatNode.childNodes[i].data, 'children', []);
-            }
-            this.thatNode.childNodes[i].data.children.push(newChild); //增加子节点
-
-            childrenNodeKeyID++; // 接口节点的 ID +1
-            console.count("HttpAction 处理")
-          }
-
-          // 处理第二种: HttpQueryAction
-
-          // 最终有效key 从 n开始
-          this.availableKey = childrenNodeKeyID + nodeKeyId
-        }
-        console.log("InterfaceConfig 处理完毕")
       }).catch(()=>{
             console.log("最终失败")
       })
-        /*
-        * 首先明白一点，数据已经在store中发ajax读过来了，也处理好了，我不需要塞数据到tree里面，我只需要正确的构建出 tree 就行
-        * 只有 tree 的 key 对应上就行
-        * */
+
     },
     methods:{
 
@@ -344,12 +310,24 @@
           }
         }
         console.log("%c 当前点击的节点是父节点的第" + currentChildNodeindex +"个元素",LOGSTYLE.lightRed)
-        this.deleteInterfaceConfig({parent_index,self_id,interfaceType,currentChildNodeindex})//并且删除 对应的InterfaceConfig item
-        --childrenNodeKeyID // 下标减一
-        this.availableKey = childrenNodeKeyID + nodeKeyId
-        // 删除对应的 tree node
-        const index = children.findIndex(d => d.id === data.id);
-        children.splice(index, 1)
+        this.deleteInterfaceConfig({parent_index,self_id,interfaceType,currentChildNodeindex}).then(()=>{
+
+          --childrenNodeKeyID // 下标减一
+          this.availableKey = childrenNodeKeyID + nodeKeyId
+          // 删除对应的 tree node
+          const index = children.findIndex(d => d.id === data.id);
+          children.splice(index, 1)
+          this.$message({
+            type: 'success',
+            message: '删除接口成功! itemKey为: ' + self_id
+          })
+        }).catch((error)=>{
+          this.$message({
+            type: 'error',
+            message: '删除接口失败!，原因: ' + error
+          })
+        })
+
       },
       showParameterEdit(obj,node){
         console.log("当前所点击节点的id 是:" + node.id)
@@ -429,6 +407,47 @@
         this.form.name =""
         this.form.interfaceType =""
         this.form.itemKey = ""
+      },
+      fillInterfaceConfigToModule(key){
+
+        // 先找到所在的 module，然后再往 module 里面渲染
+        for(let i = 0 ; i < this.getModuleConfig.length ;i++)
+        {
+          /*
+          *  i 代表 Module tree node 的下标 （index）
+          *  在 moduleConfig[i].interfaceConfig[Key]下面找
+          *  如果 moduleConfig[i].interfaceConfig[Key].length > 0 则说明有接口节点 要渲染到当前的 模块节点下面
+          *
+          *  module node（模块节点） 通过拿到 root 节点，然后 root.childNodes[i]
+          *  实际为已经存储好的： this.thatNode.childNodes[i], （直接用）
+          * */
+
+          for (let j = 0;j < this.getModuleConfig[i].interfaceConfig[key].length ; j++){
+
+            let interfaceType = key;
+            let labelName = key + this.getModuleConfig[i].interfaceConfig[key][j].itemKey;
+
+            let newChild = {
+              id:  this.getModuleConfig[i].interfaceConfig[key][j].itemKey,
+              labelName,
+              interfaceType
+            };
+            childrenNodeLength += 1; //总共接口数 +1
+
+            if (!this.thatNode.childNodes[i].data.children) {
+              this.thatNode.childNodes[i].$set(this.thatNode.childNodes[i].data, 'children', []);
+            }
+            this.thatNode.childNodes[i].data.children.push(newChild); //增加子节点
+
+            childrenNodeKeyID++; // 接口节点的 ID +1
+            console.count(key + "处理")
+          }
+
+          // 最终有效key 从 n开始
+          this.availableKey = childrenNodeKeyID + nodeKeyId
+        }
+        console.log("InterfaceConfig 处理完毕")
+
       },
     async saveAndSwitch(){
 

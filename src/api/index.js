@@ -1,35 +1,53 @@
 import ajax from './ajax';
 const BASE_URL = 'http://192.168.15.16:8482/educloud-report/report'
 
+const api = {
+  /*------初始化阶段--------*/
+  getHttpModuleList:() =>ajax(BASE_URL + '/getHttpModuleList',"POST"),
 
-/*------初始化阶段--------*/
-export const getHttpModuleList = () => ajax(BASE_URL + '/getHttpModuleList',"POST")
+  getHttpActionList:() =>ajax(BASE_URL + '/getHttpActionList','POST'),
 
-export const getHttpActionList = () => ajax(BASE_URL + '/getHttpActionList','POST')
+  getHttpQueryActionList:() =>ajax(BASE_URL + '/getHttpQueryActionList','POST'),
 
-/*------更新阶段--------*/
-export const addHttpModule = (data) => ajax(BASE_URL + '/saveHttpModule','POST',data)
+  getHttpActionReportList:() =>ajax(BASE_URL + '/getHttpActionReportList','POST'),
 
-export const deleteHttpModule = (data) => ajax(BASE_URL + '/deleteHttpModule','POST',data)
-
-export const updateHttpModule = (data) => ajax(BASE_URL + '/updateHttpModule','POST',data)
-
-export const addHttpAction = (data) => ajax(BASE_URL + '/saveHttpAction','POST',data)
-
-export const addHttpQueryAction = (data) => ajax(BASE_URL + '/saveHttpQueryAction','POST',data)
-
-export const addHttpActionReport = (data) => ajax(BASE_URL + '/saveHttpActionReport','POST',data)
-
-export const addHttpQueryActionReport = (data) => ajax(BASE_URL + '/saveHttpQueryActionReport','POST',data)
+  getHttpQueryActionReportList:() =>ajax(BASE_URL + '/getHttpQueryActionReportList','POST'),
 
 
 
-export const deleteHttpAction = (data) => ajax(BASE_URL + '/deleteHttpAction','POST',data)
+  /*------更新阶段--------*/
+  addHttpModule:(data) => ajax(BASE_URL + '/saveHttpModule','POST',data),
 
-export const updateHttpAction = (data) => ajax(BASE_URL + '/updateHttpAction','POST',data)
+  deleteHttpModule:(data) => ajax(BASE_URL + '/deleteHttpModule','POST',data),
 
-export const updateHttpQueryAction = (data) => ajax(BASE_URL + '/updateHttpQueryAction','POST',data)
+  updateHttpModule:(data) => ajax(BASE_URL + '/updateHttpModule','POST',data),
 
-export const updateHttpActionReport = (data) => ajax(BASE_URL + '/updateHttpActionReport','POST',data)
+  addHttpAction:(data) => ajax(BASE_URL + '/saveHttpAction','POST',data),
 
-export const updateHttpQueryActionReport = (data) => ajax(BASE_URL + '/updateHttpQueryActionReport','POST',data)
+  addHttpQueryAction:(data) => ajax(BASE_URL + '/saveHttpQueryAction','POST',data),
+
+  addHttpActionReport:(data) => ajax(BASE_URL + '/saveHttpActionReport','POST',data),
+
+  addHttpQueryActionReport:(data) => ajax(BASE_URL + '/saveHttpQueryActionReport','POST',data),
+
+
+
+  deleteHttpAction:(data) => ajax(BASE_URL + '/deleteHttpAction','POST',data),
+
+  deleteHttpActionReport:(data) => ajax(BASE_URL + '/deleteHttpActionReport','POST',data),
+
+  deleteHttpQueryAction:(data) => ajax(BASE_URL + '/deleteHttpQueryAction','POST',data),
+
+  deleteHttpQueryActionReport:(data) => ajax(BASE_URL + '/deleteHttpQueryActionReport','POST',data),
+
+  updateHttpAction:(data) => ajax(BASE_URL + '/updateHttpAction','POST',data),
+
+  updateHttpQueryAction:(data) => ajax(BASE_URL + '/updateHttpQueryAction','POST',data),
+
+  updateHttpActionReport:(data) => ajax(BASE_URL + '/updateHttpActionReport','POST',data),
+
+  updateHttpQueryActionReport:(data) => ajax(BASE_URL + '/updateHttpQueryActionReport','POST',data)
+
+}
+
+export default api

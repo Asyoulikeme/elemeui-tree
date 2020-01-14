@@ -6,59 +6,59 @@
           <el-input v-model="getModuleConfig[index].moduleKey" title="主键不允许修改" autocomplete="off" :disabled="true"/>
         </el-form-item>
         <el-form-item label="模块名称" :label-width="formLabelWidth">
-          <el-input v-model="getModuleConfig[index].name" autocomplete="off"></el-input>
+          <el-input v-model="getModuleConfig[index].name" autocomplete="off" />
         </el-form-item>
         <el-form-item label="数据库产品" :label-width="formLabelWidth">
           <el-select v-model="getModuleConfig[index].dbtype" placeholder="请选择您将要使用的数据库"  popper-class="input-selec">
-            <el-option class="select-option" label="MySql" value="Mysql"></el-option>
-            <el-option class="select-option" label="Oracle" value="Oracle"></el-option>
-            <el-option class="select-option" label="SQLite" value="Sqlite"></el-option>
-            <el-option class="select-option" label="SqlServer" value="SqlServer"></el-option>
-            <el-option class="select-option" label="PostgreSql" value="PostgreSql"></el-option>
+            <el-option class="select-option" label="MySql" value="Mysql" />
+            <el-option class="select-option" label="Oracle" value="Oracle" />
+            <el-option class="select-option" label="SQLite" value="Sqlite" />
+            <el-option class="select-option" label="SqlServer" value="SqlServer" />
+            <el-option class="select-option" label="PostgreSql" value="PostgreSql" />
           </el-select>
         </el-form-item>
         <el-form-item label="连接池类型" :label-width="formLabelWidth">
           <el-select v-model="getModuleConfig[index].dataSourceType" placeholder="请选择数据库连接池的类型" popper-class="input-selec"  >
-            <el-option class="select-option" label="C3P0" value="C3P0"></el-option>
-            <el-option class="select-option" label="DBCP" value="DBCP"></el-option>
-            <el-option class="select-option" label="Druid" value="Druid"></el-option>
+            <el-option class="select-option" label="C3P0" value="C3P0" />
+            <el-option class="select-option" label="DBCP" value="DBCP" />
+            <el-option class="select-option" label="Druid" value="Druid" />
 
           </el-select>
         </el-form-item>
         <el-form-item label="数据库Url" :label-width="formLabelWidth">
-          <el-input v-model="getModuleConfig[index].dbUrl" autocomplete="off" placeholder="连接数据库的Url"></el-input>
+          <el-input v-model="getModuleConfig[index].dbUrl" autocomplete="off" placeholder="连接数据库的Url" />
         </el-form-item>
         <el-form-item label="数据库用户名" :label-width="formLabelWidth">
-          <el-input v-model="getModuleConfig[index].dbUser" autocomplete="off" placeholder="连接数据库的用户名"></el-input>
+          <el-input v-model="getModuleConfig[index].dbUser" autocomplete="off" placeholder="连接数据库的用户名" />
         </el-form-item>
         <el-form-item label="数据库密码" :label-width="formLabelWidth">
-          <el-input v-model="getModuleConfig[index].dbPassword" autocomplete="off" placeholder="连接数据库的密码"></el-input>
+          <el-input v-model="getModuleConfig[index].dbPassword" autocomplete="off" placeholder="连接数据库的密码" />
         </el-form-item>
 
         <el-form-item label="开启自定义" :label-width="formLabelWidth" >
-          <el-switch v-model="getModuleConfig[index].useCustomDialect"></el-switch>
+          <el-switch v-model="getModuleConfig[index].useCustomDialect" />
         </el-form-item>
         <div class="custom-container" v-show="getModuleConfig[index].useCustomDialect">
           <el-form-item label="batchSeperator" :label-width="formLabelWidth">
-            <el-input v-model="getModuleConfig[index].batchSeperator" autocomplete="off" placeholder="batchSeperator"></el-input>
+            <el-input v-model="getModuleConfig[index].batchSeperator" autocomplete="off" placeholder="batchSeperator" />
           </el-form-item>
           <el-form-item label="openQuote" :label-width="formLabelWidth">
-            <el-input v-model="getModuleConfig[index].openQuote" autocomplete="off" placeholder="openQuote"></el-input>
+            <el-input v-model="getModuleConfig[index].openQuote" autocomplete="off" placeholder="openQuote" />
           </el-form-item>
           <el-form-item label="identitySql" :label-width="formLabelWidth">
-            <el-input v-model="getModuleConfig[index].identitySql" autocomplete="off" placeholder="identitySql"></el-input>
+            <el-input v-model="getModuleConfig[index].identitySql" autocomplete="off" placeholder="identitySql" />
           </el-form-item>
           <el-form-item label="closeQuote" :label-width="formLabelWidth">
-            <el-input v-model="getModuleConfig[index].closeQuote" autocomplete="off" placeholder="closeQuote"></el-input>
+            <el-input v-model="getModuleConfig[index].closeQuote" autocomplete="off" placeholder="closeQuote" />
           </el-form-item>
           <el-form-item label="pagingSqlTemplate" :label-width="formLabelWidth">
-            <el-input v-model="getModuleConfig[index].pagingSqlTemplate" autocomplete="off" placeholder="pagingSqlTemplate"></el-input>
+            <el-input v-model="getModuleConfig[index].pagingSqlTemplate" autocomplete="off" placeholder="pagingSqlTemplate" />
           </el-form-item>
           <el-form-item label="parameterPrefix" :label-width="formLabelWidth">
-            <el-input v-model="getModuleConfig[index].parameterPrefix" autocomplete="off" placeholder="parameterPrefix"></el-input>
+            <el-input v-model="getModuleConfig[index].parameterPrefix" autocomplete="off" placeholder="parameterPrefix" />
           </el-form-item>
           <el-form-item label="MultipleStatements" :label-width="formLabelWidth" >
-            <el-switch v-model="getModuleConfig[index].supportsMultipleStatements"></el-switch>
+            <el-switch v-model="getModuleConfig[index].supportsMultipleStatements" />
           </el-form-item>
         </div>
       </el-form>
@@ -76,14 +76,6 @@
 
     data(){
       return{
-        moduleObj:{
-          name:"232",
-          dbType:"",
-          dataSourceType:"",
-          dbUrl:"",
-          dbUser:"",
-          dbPassword:""
-        },
         formLabelWidth: '120px',
         index: this.$route.params.index
       }

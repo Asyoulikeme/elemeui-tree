@@ -7,36 +7,36 @@
       </div>
       <el-form :model="HttpAction">
         <el-form-item label="actionName" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.actionName" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.actionName" autocomplete="off" />
         </el-form-item>
         <el-form-item label="actionId" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.actionId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.actionId" autocomplete="off" />
         </el-form-item>
         <el-form-item label="actionType" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.actionType" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.actionType" autocomplete="off" />
         </el-form-item>
         <el-form-item label="AppID" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.appId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.appId" autocomplete="off" />
         </el-form-item>
         <el-form-item label="插入时间" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.insertTime" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.insertTime" autocomplete="off" />
         </el-form-item>
         <el-form-item label="插入用户ID" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.insertUserId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.insertUserId" autocomplete="off" />
         </el-form-item>
         <el-form-item label="method">
           <el-radio-group v-model="HttpAction.method">
-            <el-radio label="GET"></el-radio>
-            <el-radio label="POST"></el-radio>
+            <el-radio label="GET" />
+            <el-radio label="POST" />
           </el-radio-group>
         </el-form-item>
         <el-form-item label="所属模块" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.module" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.module" autocomplete="off" />
         </el-form-item>
         <el-form-item label="release">
           <el-radio-group v-model="HttpAction.release">
-            <el-radio label="true"></el-radio>
-            <el-radio label="false"></el-radio>
+            <el-radio label="true" />
+            <el-radio label="false" />
           </el-radio-group>
         </el-form-item>
         <el-form-item label="returnType" :label-width="formLabelWidth">
@@ -97,10 +97,10 @@
         </fieldset>
 
         <el-form-item label="updateTime" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.updateTime" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.updateTime" autocomplete="off" />
         </el-form-item>
         <el-form-item label="updateUserId" :label-width="formLabelWidth">
-          <el-input v-model="HttpAction.updateUserId" autocomplete="off"></el-input>
+          <el-input v-model="HttpAction.updateUserId" autocomplete="off" />
         </el-form-item>
       </el-form>
 

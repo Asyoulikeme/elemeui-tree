@@ -8,6 +8,7 @@
   import axios from 'axios'
   export default {
     name: 'test',
+
     methods:{
       testInterface(){
         axios({

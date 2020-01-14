@@ -2,7 +2,7 @@
   <el-collapse accordion>
     <el-collapse-item v-for="(HttpQueryActionReport,HttpQueryActionReportIndex) in getHttpQueryActionReportInterfaceConfig" :key="HttpQueryActionReportIndex">
       <div slot="title" class="title-desc">
-        <i class="header-icon el-icon-info"> HttpQueryActionReport -- {{HttpQueryActionReport.actionName}}</i>
+        <i class="header-icon el-icon-info"> HttpQueryActionReport -- {{HttpQueryActionReport.itemKey}}</i>
       </div>
       <el-form :model="HttpQueryActionReport">
         <el-form-item label="AppId" :label-width="formLabelWidth">
